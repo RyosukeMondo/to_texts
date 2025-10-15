@@ -261,7 +261,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3, 10_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Rust Developer with expertise in refactoring and code simplification | Task: Refactor all Rust functions identified in complexity audit (task 18) to achieve cyclomatic complexity ≤10 following requirements 3 and 10, using extract method refactoring and decomposition techniques while maintaining behavior | Restrictions: Must not change external behavior or API, must verify with cargo test after each refactoring, must use meaningful names for extracted functions, must maintain SLAP principle, must follow Rust idioms and borrow checker rules | _Leverage: Audit results from task 18 for target functions, cargo test for verification, design.md error handling principles_ | Success: All identified functions refactored to complexity ≤10, cargo test passes, behavior unchanged, rust-code-analysis confirms compliance, code is more readable and maintainable | Instructions: Refactor one function at a time, run cargo test after each refactoring, edit tasks.md to change this task from [ ] to [x] when all refactorings complete_
 
-- [ ] 21. Test pre-commit hooks with clean commit
+- [x] 21. Test pre-commit hooks with clean commit
   - Make a small, compliant code change (e.g., add comment)
   - Stage the change with git add
   - Attempt commit
@@ -271,6 +271,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Leverage: Configured pre-commit hooks from task 1_
   - _Requirements: 1_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in integration testing | Task: Test pre-commit hook integration following requirement 1 by making a compliant code change and verifying all hooks run and pass, validating the complete pre-commit workflow | Restrictions: Must use git commands only (git add, git commit), must verify each hook runs by checking pre-commit output, must not use --no-verify to bypass hooks, change must be compliant with all quality standards | _Leverage: Configured .pre-commit-config.yaml from task 1, all installed tools_ | Success: All hooks run in sequence, all hooks pass (green check marks), commit succeeds, git log shows commit was created, pre-commit output is readable and clear | Instructions: After successful test commit, edit tasks.md to change this task from [ ] to [x] when complete_
+  - **Test Results**: Added comment to `__init__.py`, all hooks passed (Python type checking, linting, formatting, line count validation), commit succeeded (74abe24)
 
 - [ ] 22. Test pre-commit hooks with type error
   - Introduce a deliberate type error in Python code
