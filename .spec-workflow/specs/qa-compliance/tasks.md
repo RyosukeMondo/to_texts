@@ -218,7 +218,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 2_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in type hints and terminal UI applications | Task: Add comprehensive type hints to `packages/python/zlibrary-downloader/zlibrary_downloader/tui.py` (364 lines) following requirement 2, annotating ZLibraryTUI class and all methods including rich library integration, ensuring mypy strict mode compliance | Restrictions: Must properly type rich library objects (Console, Table, Panel, etc.), use class variables annotations for FORMATS/LANGUAGES/SORT_ORDERS, handle Optional returns where methods may return None, maintain existing signatures except type annotations | _Leverage: Existing tui.py code (read file first), rich library type stubs, typing module_ | Success: ZLibraryTUI class fully typed including __init__, all methods have type annotations, class attributes properly typed, mypy --strict passes with zero errors, rich library types correctly used | Instructions: After adding type hints and verifying with mypy, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 17. Run initial complexity audit on Python code
+- [x] 17. Run initial complexity audit on Python code
   - Run radon cc on all Python modules
   - Generate report of functions with complexity >10
   - Document functions requiring refactoring
