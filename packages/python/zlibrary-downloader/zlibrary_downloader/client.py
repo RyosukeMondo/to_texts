@@ -104,12 +104,13 @@ class Zlibrary:
             print("Not logged in")
             return {}
 
-        return requests.post(
+        response: dict[str, Any] = requests.post(
             "https://" + self.__domain + url,
             data=data,
             cookies=self.__cookies,
             headers=self.__headers,
         ).json()
+        return response
 
     def __makeGetRequest(
         self,
@@ -123,12 +124,13 @@ class Zlibrary:
             print("Not logged in")
             return {}
 
-        return requests.get(
+        response: dict[str, Any] = requests.get(
             "https://" + self.__domain + url,
             params=params,
             cookies=self.__cookies if cookies is None else cookies,
             headers=self.__headers,
         ).json()
+        return response
 
     def getProfile(self) -> dict[str, Any]:
         return self.__makeGetRequest("/eapi/user/profile")
@@ -371,4 +373,6 @@ class Zlibrary:
 
     def getDownloadsLeft(self) -> int:
         user_profile: dict[str, Any] = self.getProfile()["user"]
-        return user_profile.get("downloads_limit", 10) - user_profile.get("downloads_today", 0)
+        downloads_limit: int = user_profile.get("downloads_limit", 10)
+        downloads_today: int = user_profile.get("downloads_today", 0)
+        return downloads_limit - downloads_today

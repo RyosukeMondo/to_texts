@@ -119,7 +119,13 @@ def download_book(
 
     try:
         print(f"Downloading: {book.get('title', 'Unknown')}")
-        filename, filecontent = z_client.downloadBook(book)
+        download_result = z_client.downloadBook(book)
+
+        if download_result is None:
+            print("Error: Download failed (no content returned)")
+            return None
+
+        filename, filecontent = download_result
 
         # Save the file
         filepath = os.path.join(download_dir, filename)

@@ -84,20 +84,6 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 
-# Temporary: Allow gradual typing during type hints migration (tasks 13-16)
-# These will be removed once all modules have type hints
-[[tool.mypy.overrides]]
-module = "zlibrary_downloader.client"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "zlibrary_downloader.cli"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "zlibrary_downloader.tui"
-ignore_errors = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]

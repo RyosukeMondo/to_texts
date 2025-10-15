@@ -207,7 +207,7 @@ class ZLibraryTUI:
 
             try:
                 # Perform search
-                results = self.z_client.search(**search_kwargs)
+                results: Dict[str, Any] = self.z_client.search(**search_kwargs)
                 progress.update(task, completed=True)
                 return results
             except Exception as e:
@@ -288,7 +288,7 @@ class ZLibraryTUI:
     def show_download_menu(self) -> Optional[Literal["quit"]]:
         """Show download options after search"""
         if not self.current_results:
-            return
+            return None
 
         console.print("\n[bold cyan]Download Options[/bold cyan]")
 
@@ -306,8 +306,10 @@ class ZLibraryTUI:
 
             book = self.current_results[book_num - 1]
             self.download_with_progress(book)
+            return None
         elif choice == "quit":
             return "quit"
+        return None
 
     def _confirm_proceed_with_search(self) -> bool:
         """Ask user to confirm proceeding with search. Returns False to exit, True to continue."""
