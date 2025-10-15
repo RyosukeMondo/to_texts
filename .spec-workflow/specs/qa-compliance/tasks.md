@@ -206,7 +206,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 2_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in type hints and CLI applications | Task: Add comprehensive type hints to `packages/python/zlibrary-downloader/zlibrary_downloader/cli.py` (340 lines) following requirement 2, annotating all functions including argparse integration, ensuring mypy strict mode compliance | Restrictions: Must properly type argparse.Namespace objects, use None return type for CLI functions with no return, use Optional for optional parameters with None defaults, maintain function signatures except type annotations, ensure sys.exit calls are properly handled | _Leverage: Existing cli.py code (read file first), argparse type stubs, typing module_ | Success: All functions have complete type annotations, argparse.Namespace properly typed, mypy --strict passes with zero errors, function return types are accurate (mostly -> None) | Instructions: After adding type hints and verifying with mypy, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 16. Add type hints to zlibrary_downloader/tui.py
+- [x] 16. Add type hints to zlibrary_downloader/tui.py
   - File: `packages/python/zlibrary-downloader/zlibrary_downloader/tui.py`
   - Add type annotations to ZLibraryTUI class and all methods
   - Add type hints for method parameters and return types

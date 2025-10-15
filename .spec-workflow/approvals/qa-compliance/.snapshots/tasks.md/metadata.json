@@ -1,0 +1,30 @@
+{
+  "filePath": ".spec-workflow/specs/qa-compliance/tasks.md",
+  "currentVersion": 3,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-10-15T14:10:38.083Z",
+      "trigger": "initial",
+      "approvalId": "approval_1760537438060_ajt4vb8yc",
+      "approvalTitle": "QA Compliance: Tasks Document"
+    },
+    {
+      "version": 2,
+      "filename": "snapshot-002.json",
+      "timestamp": "2025-10-15T14:12:12.125Z",
+      "trigger": "revision_requested",
+      "approvalId": "approval_1760537438060_ajt4vb8yc",
+      "approvalTitle": "QA Compliance: Tasks Document"
+    },
+    {
+      "version": 3,
+      "filename": "snapshot-003.json",
+      "timestamp": "2025-10-15T14:16:26.388Z",
+      "trigger": "approved",
+      "approvalId": "approval_1760537622637_zqamoe9gh",
+      "approvalTitle": "QA Compliance: Tasks Document (Revised with Iterative Workflow)"
+    }
+  ]
+}

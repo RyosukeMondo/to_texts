@@ -1,0 +1,21 @@
+{
+  "id": "approval_1760537438060_ajt4vb8yc",
+  "title": "QA Compliance: Tasks Document",
+  "filePath": ".spec-workflow/specs/qa-compliance/tasks.md",
+  "type": "document",
+  "status": "needs-revision",
+  "createdAt": "2025-10-15T14:10:38.060Z",
+  "category": "spec",
+  "categoryName": "qa-compliance",
+  "response": "Feedback Summary (1 comments):\n\nGeneral Comments:\n1. we may encounter pre-commit error. better to mention that. if we encouter, we must refactor in each timing.\n\n",
+  "annotations": "{\n  \"decision\": \"needs-revision\",\n  \"comments\": [\n    {\n      \"type\": \"general\",\n      \"comment\": \"we may encounter pre-commit error. better to mention that. if we encouter, we must refactor in each timing.\",\n      \"timestamp\": \"2025-10-15T14:12:06.620Z\",\n      \"id\": \"comment_1760537526620_ibxny6k4f\"\n    }\n  ],\n  \"summary\": \"Feedback Summary (1 comments):\\n\\nGeneral Comments:\\n1. we may encounter pre-commit error. better to mention that. if we encouter, we must refactor in each timing.\\n\\n\",\n  \"timestamp\": \"2025-10-15T14:12:12.275Z\"\n}",
+  "respondedAt": "2025-10-15T14:12:12.134Z",
+  "comments": [
+    {
+      "type": "general",
+      "comment": "we may encounter pre-commit error. better to mention that. if we encouter, we must refactor in each timing.",
+      "timestamp": "2025-10-15T14:12:06.620Z",
+      "id": "comment_1760537526620_ibxny6k4f"
+    }
+  ]
+}

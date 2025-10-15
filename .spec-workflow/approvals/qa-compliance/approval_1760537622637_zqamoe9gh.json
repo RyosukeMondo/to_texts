@@ -1,0 +1,12 @@
+{
+  "id": "approval_1760537622637_zqamoe9gh",
+  "title": "QA Compliance: Tasks Document (Revised with Iterative Workflow)",
+  "filePath": ".spec-workflow/specs/qa-compliance/tasks.md",
+  "type": "document",
+  "status": "approved",
+  "createdAt": "2025-10-15T14:13:42.637Z",
+  "category": "spec",
+  "categoryName": "qa-compliance",
+  "response": "ダッシュボードから承認",
+  "respondedAt": "2025-10-15T14:16:26.397Z"
+}

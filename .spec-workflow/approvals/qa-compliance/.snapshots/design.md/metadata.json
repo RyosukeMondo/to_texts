@@ -1,0 +1,22 @@
+{
+  "filePath": ".spec-workflow/specs/qa-compliance/design.md",
+  "currentVersion": 2,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-10-15T14:05:51.474Z",
+      "trigger": "initial",
+      "approvalId": "approval_1760537151427_1l5j3ubgg",
+      "approvalTitle": "QA Compliance: Design Document"
+    },
+    {
+      "version": 2,
+      "filename": "snapshot-002.json",
+      "timestamp": "2025-10-15T14:06:44.952Z",
+      "trigger": "approved",
+      "approvalId": "approval_1760537151427_1l5j3ubgg",
+      "approvalTitle": "QA Compliance: Design Document"
+    }
+  ]
+}
