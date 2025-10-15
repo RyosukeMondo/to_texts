@@ -228,7 +228,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3, 10_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in code metrics and refactoring | Task: Run comprehensive complexity audit on Python codebase following requirements 3 and 10, using radon to identify all functions with cyclomatic complexity >10, generating detailed report for refactoring | Restrictions: Must use radon cc --min C command, must generate JSON output for parsing, must document each violation with file path, function name, line number, and complexity score, do not refactor yet (audit only) | _Leverage: Installed radon tool, design.md Component 3 for usage, existing Python codebase in packages/python/zlibrary-downloader/zlibrary_downloader/_ | Success: Audit complete with comprehensive report, all functions with complexity >10 identified, report includes file paths, function names, line numbers, and complexity scores, refactoring task list created for each violation | Instructions: Create audit report as comment in this task or separate file, edit tasks.md to change this task from [ ] to [x] when audit complete_
 
-- [ ] 18. Run initial complexity audit on Rust code
+- [x] 18. Run initial complexity audit on Rust code
   - Run rust-code-analysis on Rust modules
   - Generate report of functions with complexity >10
   - Document functions requiring refactoring
@@ -237,6 +237,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Leverage: Installed rust-code-analysis-cli tool_
   - _Requirements: 3, 10_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Rust Developer with expertise in code metrics and refactoring | Task: Run comprehensive complexity audit on Rust codebase following requirements 3 and 10, using rust-code-analysis to identify all functions with cyclomatic complexity >10, generating detailed report for refactoring | Restrictions: Must use rust-code-analysis-cli --metrics -O json, must parse JSON output to extract complexity metrics, must document each violation with file path, function name, line number, and complexity score, do not refactor yet (audit only) | _Leverage: Installed rust-code-analysis-cli tool, design.md Component 2 for usage, existing Rust codebase in packages/rust/text-extractor/src/_ | Success: Audit complete with comprehensive report, all functions with complexity >10 identified, report includes file paths, function names, line numbers, and complexity scores, refactoring task list created for each violation | Instructions: Create audit report as comment in this task or separate file, edit tasks.md to change this task from [ ] to [x] when audit complete_
+  - **Audit Results**: 3 functions exceed threshold - `main` (CC: 12), `extract_epub_text` (CC: 12), `strip_html_tags` (CC: 11). Full report: `.spec-workflow/specs/qa-compliance/rust-complexity-audit.md`
 
 - [ ] 19. Refactor Python high-complexity functions (if any found)
   - File: Varies based on audit results from task 17
