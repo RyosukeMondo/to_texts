@@ -148,7 +148,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 4_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in AST parsing and static analysis | Task: Create `scripts/validate_function_size.py` script following requirement 4, validating function sizes ≤30 lines using Python AST for .py files and regex/basic parsing for .rs files as specified in design.md Component 5 | Restrictions: Must use #!/usr/bin/env python3 shebang, stdlib only (including ast module), must count lines excluding function signature and docstrings, handle both sync and async Python functions, use reasonable heuristics for Rust functions | _Leverage: design.md Component 5 for implementation and structure, Python ast module documentation_ | Success: Script is executable, correctly parses Python functions with AST, identifies Rust functions with reasonable accuracy, provides detailed violation reports (function name, file, line number, actual line count), exits with proper codes | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 11. Install pre-commit and Rust tools
+- [x] 11. Install pre-commit and Rust tools
   - Install pre-commit framework (pip install pre-commit)
   - Install rust-code-analysis-cli (cargo install rust-code-analysis-cli)
   - Run pre-commit install to setup git hooks
