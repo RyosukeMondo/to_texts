@@ -21,3 +21,9 @@ from .tui import ZLibraryTUI
 # Package metadata
 __version__: str = "0.1.0"
 __all__: List[str] = ["Zlibrary", "ZLibraryTUI"]
+
+
+def test_type_error(x: int) -> str:
+    """Test function with corrected type annotation."""
+    # Now correctly returns a string
+    return str(x + 10)
