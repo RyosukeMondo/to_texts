@@ -50,14 +50,8 @@ class ZLibraryTUI:
         console.print(panel)
         console.print()
 
-    def get_search_params(self) -> Dict[str, Any]:  # noqa: C901
-        """Interactively collect search parameters"""
-        console.print("\n[bold cyan]Search Parameters[/bold cyan]", style="bold")
-        console.print("Press Enter to skip optional fields\n")
-
-        params = {}
-
-        # Required: Title
+    def _prompt_for_title(self, params: Dict[str, Any]) -> None:
+        """Prompt for required title parameter"""
         while True:
             title = Prompt.ask("[yellow]Book title or search query[/yellow] [red]*required[/red]")
             if title.strip():
@@ -65,7 +59,8 @@ class ZLibraryTUI:
                 break
             console.print("[red]Title is required![/red]")
 
-        # Optional: Format
+    def _prompt_for_format(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional file format filter"""
         if Confirm.ask("\n[cyan]Filter by file format?[/cyan]", default=False):
             console.print(f"Available formats: [dim]{', '.join(self.FORMATS)}[/dim]")
             format_choice = Prompt.ask(
@@ -74,32 +69,33 @@ class ZLibraryTUI:
             if format_choice:
                 params["format"] = format_choice
 
-        # Optional: Year range
-        if Confirm.ask("\n[cyan]Filter by publication year?[/cyan]", default=False):
-            year_from = IntPrompt.ask("[yellow]From year[/yellow] (e.g., 2020)", default=None)
-            if year_from:
-                # Validate year range
-                if year_from < 1800 or year_from > 2100:
-                    console.print("[yellow]Warning: Year adjusted to reasonable range[/yellow]")
-                    year_from = max(1800, min(2100, year_from))
+    def _prompt_for_year_range(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional publication year range"""
+        if not Confirm.ask("\n[cyan]Filter by publication year?[/cyan]", default=False):
+            return
+
+        year_from = IntPrompt.ask("[yellow]From year[/yellow] (e.g., 2020)", default=None)
+        if year_from:
+            if year_from < 1800 or year_from > 2100:
+                console.print("[yellow]Warning: Year adjusted to reasonable range[/yellow]")
+                year_from = max(1800, min(2100, year_from))
+            params["year_from"] = year_from
+
+        year_to = IntPrompt.ask("[yellow]To year[/yellow] (e.g., 2024)", default=None)
+        if year_to:
+            if year_to < 1800 or year_to > 2100:
+                console.print("[yellow]Warning: Year adjusted to reasonable range[/yellow]")
+                year_to = max(1800, min(2100, year_to))
+
+            if year_from and year_to < year_from:
+                console.print("[red]'To year' must be >= 'From year'. Swapping values.[/red]")
+                year_from, year_to = year_to, year_from
                 params["year_from"] = year_from
 
-            year_to = IntPrompt.ask("[yellow]To year[/yellow] (e.g., 2024)", default=None)
-            if year_to:
-                # Validate year range
-                if year_to < 1800 or year_to > 2100:
-                    console.print("[yellow]Warning: Year adjusted to reasonable range[/yellow]")
-                    year_to = max(1800, min(2100, year_to))
+            params["year_to"] = year_to
 
-                # Validate year_from <= year_to
-                if year_from and year_to < year_from:
-                    console.print("[red]'To year' must be >= 'From year'. Swapping values.[/red]")
-                    year_from, year_to = year_to, year_from
-                    params["year_from"] = year_from
-
-                params["year_to"] = year_to
-
-        # Optional: Language
+    def _prompt_for_language(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional language filter"""
         if Confirm.ask("\n[cyan]Filter by language?[/cyan]", default=False):
             console.print(f"Available languages: [dim]{', '.join(self.LANGUAGES)}[/dim]")
             lang_choice = Prompt.ask(
@@ -108,26 +104,42 @@ class ZLibraryTUI:
             if lang_choice:
                 params["language"] = lang_choice
 
-        # Optional: Sort order
+    def _prompt_for_sort_order(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional sort order"""
         if Confirm.ask("\n[cyan]Sort results?[/cyan]", default=False):
             sort_choice = Prompt.ask(
                 "[yellow]Sort by[/yellow]", choices=self.SORT_ORDERS, default="popular"
             )
             params["order"] = sort_choice
 
-        # Optional: Limit results
+    def _prompt_for_limit(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional result limit"""
         if Confirm.ask("\n[cyan]Limit number of results?[/cyan]", default=False):
             limit = IntPrompt.ask("[yellow]Maximum results[/yellow] (1-100)", default=20)
-            # Guard: limit between 1 and 100
             limit = max(1, min(100, limit))
             params["limit"] = limit
 
-        # Optional: Page number
+    def _prompt_for_page(self, params: Dict[str, Any]) -> None:
+        """Prompt for optional page number"""
         if Confirm.ask("\n[cyan]Specify page number?[/cyan]", default=False):
             page = IntPrompt.ask("[yellow]Page number[/yellow] (min: 1)", default=1)
-            # Guard: page >= 1
             page = max(1, page)
             params["page"] = page
+
+    def get_search_params(self) -> Dict[str, Any]:
+        """Interactively collect search parameters"""
+        console.print("\n[bold cyan]Search Parameters[/bold cyan]", style="bold")
+        console.print("Press Enter to skip optional fields\n")
+
+        params: Dict[str, Any] = {}
+
+        self._prompt_for_title(params)
+        self._prompt_for_format(params)
+        self._prompt_for_year_range(params)
+        self._prompt_for_language(params)
+        self._prompt_for_sort_order(params)
+        self._prompt_for_limit(params)
+        self._prompt_for_page(params)
 
         return params
 
@@ -297,50 +309,58 @@ class ZLibraryTUI:
         elif choice == "quit":
             return "quit"
 
-    def run(self) -> None:  # noqa: C901
+    def _confirm_proceed_with_search(self) -> bool:
+        """Ask user to confirm proceeding with search. Returns False to exit, True to continue."""
+        proceed = Confirm.ask("\n[cyan]Proceed with search?[/cyan]", default=True)
+        if not proceed and not Confirm.ask("[yellow]Start a new search?[/yellow]", default=True):
+            return False
+        return proceed
+
+    def _handle_search_cycle(self) -> bool:
+        """Execute one search cycle. Returns False to exit loop, True to continue."""
+        params = self.get_search_params()
+        self.display_search_params(params)
+
+        if not self._confirm_proceed_with_search():
+            return False
+
+        results = self.search_with_progress(params)
+
+        if results and self.display_results_table(results):
+            result = self.show_download_menu()
+            if result == "quit":
+                return False
+
+        console.print()
+        if not Confirm.ask("[cyan]Search for another book?[/cyan]", default=True):
+            return False
+
+        console.print("\n" + "=" * 70 + "\n")
+        return True
+
+    def _handle_keyboard_interrupt(self) -> bool:
+        """Handle keyboard interrupt. Returns False to exit, True to continue."""
+        console.print("\n\n[yellow]Search cancelled[/yellow]")
+        return Confirm.ask("[cyan]Start a new search?[/cyan]", default=True)
+
+    def _handle_exception(self, error: Exception) -> bool:
+        """Handle general exception. Returns False to exit, True to continue."""
+        console.print(f"\n[red]Error: {error}[/red]")
+        return Confirm.ask("[cyan]Try again?[/cyan]", default=True)
+
+    def run(self) -> None:
         """Main TUI loop"""
         self.show_welcome()
 
         while True:
             try:
-                # Get search parameters
-                params = self.get_search_params()
-
-                # Display parameters
-                self.display_search_params(params)
-
-                # Confirm search
-                proceed = Confirm.ask("\n[cyan]Proceed with search?[/cyan]", default=True)
-                if not proceed and not Confirm.ask(
-                    "[yellow]Start a new search?[/yellow]", default=True
-                ):
+                if not self._handle_search_cycle():
                     break
-                if not proceed:
-                    continue
-
-                # Perform search
-                results = self.search_with_progress(params)
-
-                if results and self.display_results_table(results):
-                    # Show download menu
-                    result = self.show_download_menu()
-                    if result == "quit":
-                        break
-
-                # Ask to search again
-                console.print()
-                if not Confirm.ask("[cyan]Search for another book?[/cyan]", default=True):
-                    break
-
-                console.print("\n" + "=" * 70 + "\n")
-
             except KeyboardInterrupt:
-                console.print("\n\n[yellow]Search cancelled[/yellow]")
-                if not Confirm.ask("[cyan]Start a new search?[/cyan]", default=True):
+                if not self._handle_keyboard_interrupt():
                     break
             except Exception as e:
-                console.print(f"\n[red]Error: {e}[/red]")
-                if not Confirm.ask("[cyan]Try again?[/cyan]", default=True):
+                if not self._handle_exception(e):
                     break
 
         console.print("\n[cyan]Goodbye![/cyan]\n")

@@ -210,37 +210,46 @@ def interactive_mode(z_client: Zlibrary) -> None:
             print("Invalid choice. Please try again.")
 
 
-def command_line_mode(z_client: Zlibrary, args: argparse.Namespace) -> None:
-    """Command line mode for direct search and optional download"""
-    # Prepare search filters
+def build_search_kwargs(args: argparse.Namespace) -> Dict[str, Any]:
+    """Build search kwargs from command line arguments"""
     search_kwargs: Dict[str, Any] = {}
-    if args.format:
-        search_kwargs["format"] = args.format
-    if args.year_from:
-        search_kwargs["year_from"] = args.year_from
-    if args.year_to:
-        search_kwargs["year_to"] = args.year_to
-    if args.language:
-        search_kwargs["language"] = args.language
-    if args.order:
-        search_kwargs["order"] = args.order
-    if args.limit:
-        search_kwargs["limit"] = args.limit
-    if args.page:
-        search_kwargs["page"] = args.page
+    arg_mapping = {
+        "format": "format",
+        "year_from": "year_from",
+        "year_to": "year_to",
+        "language": "language",
+        "order": "order",
+        "limit": "limit",
+        "page": "page",
+    }
 
-    results = search_books(z_client, args.title, **search_kwargs)
+    for arg_name, kwarg_name in arg_mapping.items():
+        value = getattr(args, arg_name, None)
+        if value:
+            search_kwargs[kwarg_name] = value
 
+    return search_kwargs
+
+
+def handle_search_results(
+    z_client: Zlibrary, results: Optional[Dict[str, Any]], download: bool
+) -> None:
+    """Handle search results and optional download"""
     if results and "books" in results and results["books"]:
         display_results(results)
-
-        # Download the first result if --download flag is set
-        if args.download:
+        if download:
             print("\nDownloading first result...")
             download_book(z_client, results["books"][0])
     else:
         print("No results found.")
         sys.exit(1)
+
+
+def command_line_mode(z_client: Zlibrary, args: argparse.Namespace) -> None:
+    """Command line mode for direct search and optional download"""
+    search_kwargs = build_search_kwargs(args)
+    results = search_books(z_client, args.title, **search_kwargs)
+    handle_search_results(z_client, results, args.download)
 
 
 def tui_mode(z_client: Zlibrary) -> None:
