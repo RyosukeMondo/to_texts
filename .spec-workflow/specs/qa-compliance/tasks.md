@@ -273,7 +273,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in integration testing | Task: Test pre-commit hook integration following requirement 1 by making a compliant code change and verifying all hooks run and pass, validating the complete pre-commit workflow | Restrictions: Must use git commands only (git add, git commit), must verify each hook runs by checking pre-commit output, must not use --no-verify to bypass hooks, change must be compliant with all quality standards | _Leverage: Configured .pre-commit-config.yaml from task 1, all installed tools_ | Success: All hooks run in sequence, all hooks pass (green check marks), commit succeeds, git log shows commit was created, pre-commit output is readable and clear | Instructions: After successful test commit, edit tasks.md to change this task from [ ] to [x] when complete_
   - **Test Results**: Added comment to `__init__.py`, all hooks passed (Python type checking, linting, formatting, line count validation), commit succeeded (74abe24)
 
-- [ ] 22. Test pre-commit hooks with type error
+- [x] 22. Test pre-commit hooks with type error
   - Introduce a deliberate type error in Python code
   - Stage the change with git add
   - Attempt commit
@@ -284,6 +284,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Leverage: Configured mypy hook_
   - _Requirements: 2, 6_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in negative testing | Task: Test pre-commit type checking following requirements 2 and 6 by introducing a deliberate type error, verifying mypy blocks commit with clear error message, then fixing and verifying success | Restrictions: Must introduce actual type error (e.g., wrong argument type), must not use --no-verify, must verify mypy specifically fails (not other hooks), must document error message received | _Leverage: Configured mypy hook from .pre-commit-config.yaml, type hints added in tasks 13-16_ | Success: Type error introduced in Python file, mypy hook fails and blocks commit, error message clearly indicates type error with file and line, fixing error allows commit to succeed | Instructions: Document the test results, revert test changes or commit the fix, edit tasks.md to change this task from [ ] to [x] when complete_
+  - **Test Results**: Introduced type error in `__init__.py` (function returning int when str expected), mypy hook failed with clear error: "zlibrary_downloader/__init__.py:29: error: Incompatible return value type (got "int", expected "str") [return-value]", commit was blocked. Fixed type error by adding str() conversion, commit succeeded (f18316c), all hooks passed
 
 - [ ] 23. Test pre-commit hooks with complexity violation
   - Temporarily add a function with complexity >10
