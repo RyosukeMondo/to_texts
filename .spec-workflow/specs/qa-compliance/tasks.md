@@ -182,7 +182,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 2_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in type hints and PEP 484 | Task: Add complete type hints to `packages/python/zlibrary-downloader/zlibrary_downloader/__init__.py` following requirement 2, ensuring all exports are properly typed and module passes mypy strict mode | Restrictions: Must follow PEP 484 and PEP 526 standards, use typing module for complex types (List, Dict, Optional, Union), do not change runtime behavior, ensure backward compatibility | _Leverage: Existing __init__.py code, mypy documentation, PEP 484 specification_ | Success: All functions/classes have complete type annotations, mypy --strict passes with zero errors for this file, imports are properly typed, module docstring added with type information | Instructions: After adding type hints and verifying with mypy, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 14. Add type hints to zlibrary_downloader/client.py
+- [x] 14. Add type hints to zlibrary_downloader/client.py
   - File: `packages/python/zlibrary-downloader/zlibrary_downloader/client.py`
   - Add type annotations to Zlibrary class and all methods
   - Add type hints for private methods (__makePostRequest, __makeGetRequest, etc.)
