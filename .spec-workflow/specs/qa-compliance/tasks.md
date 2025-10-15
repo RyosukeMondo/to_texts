@@ -122,7 +122,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in code metrics and JSON parsing | Task: Create `scripts/parse_python_complexity.py` script following requirement 3, parsing radon JSON output and reporting functions with cyclomatic complexity exceeding threshold (default 10) | Restrictions: Must use #!/usr/bin/env python3 shebang, stdlib only, must handle radon JSON format correctly, provide clear output with function names and locations | _Leverage: design.md Component 3 for specifications, radon JSON output format_ | Success: Script is executable, correctly parses radon JSON, identifies violations accurately, provides detailed output (function name, file, line, complexity score), exits with proper codes, handles malformed JSON gracefully | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 9. Create line count validator script
+- [x] 9. Create line count validator script
   - File: `scripts/validate_line_count.py`
   - Create Python script to validate file line counts ≤400
   - Accept list of file paths as arguments (from pre-commit)
