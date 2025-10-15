@@ -42,6 +42,7 @@ dev = [
     "radon>=6.0.0",
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
+    "types-requests>=2.31.0",
 ]
 
 [project.scripts]
@@ -71,7 +72,7 @@ exclude = '''
 '''
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -82,6 +83,20 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
+
+# Temporary: Allow gradual typing during type hints migration (tasks 13-16)
+# These will be removed once all modules have type hints
+[[tool.mypy.overrides]]
+module = "zlibrary_downloader.client"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "zlibrary_downloader.cli"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "zlibrary_downloader.tui"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

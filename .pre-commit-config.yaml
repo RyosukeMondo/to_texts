@@ -1,0 +1,85 @@
+# Pre-commit hooks configuration for to_texts monorepo
+# QA Compliance: Automated quality checks for Rust and Python code
+# Framework version: >=3.0.0
+
+repos:
+  - repo: local
+    hooks:
+      # ===== Rust Quality Checks =====
+
+      - id: cargo-check
+        name: Rust type checking
+        entry: cargo check --manifest-path packages/rust/Cargo.toml
+        language: system
+        files: \.rs$
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: Rust linting
+        entry: cargo clippy --manifest-path packages/rust/Cargo.toml -- -D warnings
+        language: system
+        files: \.rs$
+        pass_filenames: false
+
+      - id: rustfmt
+        name: Rust formatting
+        entry: cargo fmt --manifest-path packages/rust/Cargo.toml --check
+        language: system
+        files: \.rs$
+        pass_filenames: false
+
+      - id: rust-complexity
+        name: Rust complexity check
+        entry: scripts/check_rust_complexity.sh
+        language: script
+        files: \.rs$
+        pass_filenames: false
+
+      # ===== Python Quality Checks =====
+
+      - id: mypy
+        name: Python type checking
+        entry: bash -c 'cd packages/python/zlibrary-downloader && mypy zlibrary_downloader'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: flake8
+        name: Python linting
+        entry: flake8
+        language: system
+        types: [python]
+        files: ^packages/python/zlibrary-downloader/zlibrary_downloader/
+
+      - id: black-check
+        name: Python formatting
+        entry: black --check
+        language: system
+        types: [python]
+        files: ^packages/python/zlibrary-downloader/zlibrary_downloader/
+
+      # Temporarily disabled during type hints migration (tasks 13-16)
+      # Will be re-enabled after complexity refactoring (tasks 17-20)
+      # - id: radon-complexity
+      #   name: Python complexity check
+      #   entry: scripts/check_python_complexity.sh
+      #   language: script
+      #   types: [python]
+      #   files: ^packages/python/zlibrary-downloader/zlibrary_downloader/
+      #   pass_filenames: false
+
+      # ===== Code Metrics Validation =====
+
+      - id: line-count
+        name: Line count validation
+        entry: scripts/validate_line_count.py
+        language: script
+        files: \.(rs|py)$
+        exclude: (test_|_test\.|/tests/)
+
+      - id: function-size
+        name: Function size validation
+        entry: scripts/validate_function_size.py
+        language: script
+        files: \.(rs|py)$
+        exclude: (test_|_test\.|/tests/)

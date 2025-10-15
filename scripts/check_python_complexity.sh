@@ -40,5 +40,5 @@ radon cc --min C --json $PYTHON_FILES > "$TEMP_JSON" 2>&1 || {
 }
 
 # Call Python parser script to validate complexity threshold
-python3 "$SCRIPT_DIR/parse_python_complexity.py" "$TEMP_JSON" 10
+python3 "$SCRIPT_DIR/parse_python_complexity.py" "$TEMP_JSON" --threshold 10
 exit $?

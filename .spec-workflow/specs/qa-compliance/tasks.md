@@ -170,7 +170,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 6, 7, 8_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in package management and dependencies | Task: Update `packages/python/zlibrary-downloader/pyproject.toml` [project.optional-dependencies].dev section following requirements 6, 7, and 8, adding all Python quality tools with versions specified in design.md Tool Selection, then install with editable install | Restrictions: Use minimum version specifiers (>=) not pinned versions, ensure dev dependencies are separate from runtime dependencies, do not modify existing dev dependencies if any, must test installation succeeds | _Leverage: design.md Tool Selection sections for exact versions, existing pyproject.toml for structure_ | Success: All tools added to [project.optional-dependencies].dev with correct versions, installation via 'pip install -e ".[dev]"' succeeds without errors, all tools available and runnable (mypy --version, black --version, etc.) | Instructions: After installation, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 13. Add type hints to zlibrary_downloader/__init__.py
+- [x] 13. Add type hints to zlibrary_downloader/__init__.py
   - File: `packages/python/zlibrary-downloader/zlibrary_downloader/__init__.py`
   - Add module-level type hints and docstring
   - Add type annotations to any existing functions/classes
