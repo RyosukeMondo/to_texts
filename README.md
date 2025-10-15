@@ -119,6 +119,151 @@ cd ../python/zlibrary-downloader
 ./scripts/setup.sh
 ```
 
+## Quality Assurance
+
+This repository enforces code quality standards through automated pre-commit hooks. All commits are validated for type safety, code style, complexity, and maintainability.
+
+### Quick Setup
+
+Install QA tools and setup git hooks:
+
+```bash
+# Install pre-commit framework
+pip install pre-commit
+
+# Install Rust analysis tools
+cargo install rust-code-analysis-cli
+
+# Install Python development dependencies
+cd packages/python/zlibrary-downloader
+pip install -e ".[dev]"
+cd ../../..
+
+# Setup git hooks
+pre-commit install
+```
+
+### Quality Standards
+
+The following standards are automatically enforced on every commit:
+
+**Code Metrics:**
+- Maximum 400 lines per file
+- Maximum 30 lines per function
+- Maximum cyclomatic complexity of 10
+
+**Rust Checks:**
+- Type checking (`cargo check`)
+- Linting (`cargo clippy`)
+- Formatting (`rustfmt`)
+- Complexity analysis
+
+**Python Checks:**
+- Type checking (`mypy --strict`)
+- Linting (`flake8`)
+- Formatting (`black --check`)
+- Complexity analysis (`radon`)
+
+### Manual Quality Checks
+
+Run quality checks manually without committing:
+
+```bash
+# Run all pre-commit hooks on all files
+pre-commit run --all-files
+
+# Run specific hooks
+pre-commit run mypy --all-files
+pre-commit run cargo-clippy --all-files
+
+# Rust checks
+cd packages/rust
+cargo check
+cargo clippy
+cargo fmt --check
+cargo test
+
+# Python checks
+cd packages/python/zlibrary-downloader
+mypy zlibrary_downloader/
+flake8 zlibrary_downloader/
+black --check zlibrary_downloader/
+pytest --cov --cov-report=html
+```
+
+### Auto-Fixing Issues
+
+Some tools can automatically fix violations:
+
+```bash
+# Auto-format Rust code
+cd packages/rust
+cargo fmt
+
+# Auto-format Python code
+cd packages/python/zlibrary-downloader
+black zlibrary_downloader/
+
+# Auto-fix some flake8 issues
+autopep8 --in-place --aggressive zlibrary_downloader/
+```
+
+### Troubleshooting
+
+**Pre-commit hooks not running:**
+```bash
+# Verify installation
+pre-commit --version
+
+# Reinstall hooks
+pre-commit uninstall
+pre-commit install
+```
+
+**Tool not found errors:**
+```bash
+# Rust tools
+cargo install rust-code-analysis-cli
+
+# Python tools (all at once)
+cd packages/python/zlibrary-downloader
+pip install -e ".[dev]"
+
+# Python tools (individually)
+pip install mypy>=1.8.0 black>=24.0.0 flake8>=7.0.0 radon>=6.0.0
+```
+
+**Emergency bypass (use sparingly):**
+```bash
+# Skip hooks for urgent WIP commits on feature branches
+git commit --no-verify -m "WIP: fix needed"
+
+# Note: Violations must be fixed before merging to main
+```
+
+**Performance issues:**
+```bash
+# Run hooks only on staged files (default behavior)
+git add <files>
+git commit
+
+# Skip slow hooks temporarily during development
+SKIP=rust-complexity,radon-complexity git commit
+```
+
+### Development Workflow
+
+1. Make code changes
+2. Stage changes: `git add <files>`
+3. Attempt commit: `git commit -m "message"`
+4. If hooks fail:
+   - Review error messages
+   - Fix violations
+   - Repeat from step 2
+5. When all hooks pass, commit succeeds
+
+For detailed QA documentation, see: `docs/qa-compliance.md`
+
 ## Contributing
 
 This is a monorepo managed with:
@@ -128,6 +273,11 @@ This is a monorepo managed with:
 When adding new projects:
 1. Add Rust crates to `packages/rust/` and update workspace `Cargo.toml`
 2. Add Python packages to `packages/python/` with their own `pyproject.toml`
+
+**Code Quality:**
+- All code must pass pre-commit hooks (see Quality Assurance section)
+- Maintain test coverage ≥80% for Python code
+- Follow existing code style and patterns
 
 ## License
 
