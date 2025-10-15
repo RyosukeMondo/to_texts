@@ -338,7 +338,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 7_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python QA Engineer with expertise in API testing and mocking | Task: Write comprehensive unit tests for zlibrary_downloader/client.py following requirement 7, achieving >80% coverage, mocking all HTTP requests, testing success and error scenarios | Restrictions: Must use pytest framework, must mock requests library (use pytest-mock or unittest.mock), must not make real API calls, must test both success and failure paths, must follow AAA pattern (Arrange-Act-Assert) | _Leverage: test_client.py stub from task 25, existing client.py code, pytest fixtures from conftest.py, design.md testing strategy_ | Success: All major Zlibrary methods tested, >80% coverage of client.py, tests pass with pytest, mocking properly isolates unit tests, both success and error scenarios covered | Instructions: After writing tests and verifying coverage, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 27. Write unit tests for validator scripts
+- [x] 27. Write unit tests for validator scripts
   - Files: `scripts/tests/test_validators.py`
   - Create tests directory under scripts/
   - Test line count validator with sample files
@@ -349,6 +349,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Leverage: pytest, sample code snippets_
   - _Requirements: 4, 7_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python QA Engineer with expertise in testing validation logic | Task: Create comprehensive unit tests for custom validator scripts following requirements 4 and 7, testing line count, function size, and complexity validators with various scenarios | Restrictions: Must create scripts/tests/ directory, must use pytest, must test both passing and failing scenarios, must test edge cases (exactly at limit, just over limit), must use temporary files for testing | _Leverage: pytest tmpdir fixture, validators from tasks 9-10, complexity parsers from tasks 6 and 8_ | Success: All validators tested with multiple scenarios, tests cover edge cases and boundary conditions, tests verify correct exit codes, tests verify error message format, all tests pass | Instructions: After writing tests and verifying they pass, edit tasks.md to change this task from [ ] to [x] when complete_
+  - **Implementation**: Created `scripts/tests/` directory with `test_validators.py` containing 39 comprehensive unit tests across 4 test classes: `TestLineCountValidator` (10 tests), `TestFunctionSizeValidator` (9 tests), `TestPythonComplexityParser` (10 tests), `TestRustComplexityParser` (10 tests). Tests cover: exclusion rules, line counting for Python/Rust, edge cases at limits, just over limits, multiple files, invalid JSON, missing files, and correct violation detection. All 39 tests pass with pytest. Flake8 passes with no linting issues.
 
 - [ ] 28. Run full QA validation and generate coverage report
   - Run pre-commit on all files: pre-commit run --all-files
