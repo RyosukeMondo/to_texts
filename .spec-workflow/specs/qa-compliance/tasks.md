@@ -87,7 +87,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3, 8_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: DevOps Engineer with expertise in bash scripting and code analysis | Task: Create `scripts/check_rust_complexity.sh` bash script following requirements 3 and 8, implementing the workflow specified in design.md Component 2: run rust-code-analysis-cli, save JSON output, call parser script with threshold 10 | Restrictions: Must use #!/bin/bash shebang, must use 'set -e' for error propagation, do not hardcode file paths (use script directory resolution), ensure cross-platform compatibility (Linux/macOS) | _Leverage: design.md Component 2 for exact implementation, scripts directory must be created if it doesn't exist_ | Success: Script is executable (chmod +x), runs rust-code-analysis-cli correctly, handles errors gracefully, calls parser script with correct arguments, exits with appropriate code (0=pass, 1=fail) | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 6. Create Rust complexity parser script
+- [x] 6. Create Rust complexity parser script
   - File: `scripts/parse_rust_complexity.py`
   - Create Python script to parse rust-code-analysis JSON output
   - Accept JSON file path and complexity threshold as arguments
