@@ -76,7 +76,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 5, 8_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Rust Developer with expertise in cargo workspaces and clippy configuration | Task: Extend existing `packages/rust/Cargo.toml` workspace configuration following requirements 5 and 8, adding [workspace.lints.clippy] section with strict linting rules as specified in design.md Configuration Files section | Restrictions: Do not modify existing [workspace], [workspace.package], or [workspace.dependencies] sections, ensure TOML syntax is valid, lint levels must be "warn" or "deny" only | _Leverage: design.md "Configuration Files - Rust Clippy Configuration", existing Cargo.toml structure_ | Success: Clippy lints section added to workspace configuration, all specified lints configured with correct levels, cargo clippy accepts configuration, lints apply to all workspace members | Instructions: After editing the file, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 5. Create Rust complexity checker script
+- [x] 5. Create Rust complexity checker script
   - File: `scripts/check_rust_complexity.sh`
   - Create bash script to run rust-code-analysis and check complexity
   - Run rust-code-analysis-cli on Rust source files
