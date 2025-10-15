@@ -18,5 +18,6 @@ from typing import List
 from .client import Zlibrary
 from .tui import ZLibraryTUI
 
+# Package metadata
 __version__: str = "0.1.0"
 __all__: List[str] = ["Zlibrary", "ZLibraryTUI"]
