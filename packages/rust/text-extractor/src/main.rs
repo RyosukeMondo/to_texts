@@ -127,10 +127,15 @@ fn extract_epub_text(epub_path: &Path, output_dir: &Path) -> Result<PathBuf> {
 
     // Extract text from all resources
     let resources = doc.resources.clone();
-    for (path, (mime_type, _)) in resources.iter() {
+
+    for (resource_id, (file_path, mime_type)) in resources.iter() {
+        let path_str = file_path.to_string_lossy();
+
         // Only process HTML/XHTML content
-        if mime_type.starts_with("application/xhtml") || mime_type.starts_with("text/html") {
-            if let Some((content, _)) = doc.get_resource_str(path) {
+        if mime_type.starts_with("application/xhtml") || mime_type.starts_with("text/html")
+            || path_str.ends_with(".xhtml") || path_str.ends_with(".html") {
+            // Use resource_id to get the content, not the file path
+            if let Some((content, _)) = doc.get_resource_str(resource_id) {
                 // Basic HTML tag stripping (simple approach)
                 let cleaned = strip_html_tags(&content);
                 text.push_str(&cleaned);
