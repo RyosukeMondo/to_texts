@@ -99,7 +99,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in JSON parsing and data validation | Task: Create `scripts/parse_rust_complexity.py` script following requirement 3, parsing rust-code-analysis JSON output and reporting functions with cyclomatic complexity exceeding threshold (default 10) | Restrictions: Must use #!/usr/bin/env python3 shebang, must use only stdlib (no external dependencies), must validate JSON structure, must provide clear error messages with file paths and line numbers | _Leverage: design.md Component 2 for specifications, rust-code-analysis JSON format documentation_ | Success: Script is executable, correctly parses rust-code-analysis JSON, identifies complexity violations accurately, provides detailed output (function name, file, line, complexity score), exits with proper codes (0=pass, 1=violations, 2=error) | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 7. Create Python complexity checker script
+- [x] 7. Create Python complexity checker script
   - File: `scripts/check_python_complexity.sh`
   - Create bash script to run radon and check complexity
   - Run radon cc --min C --json on Python source files
