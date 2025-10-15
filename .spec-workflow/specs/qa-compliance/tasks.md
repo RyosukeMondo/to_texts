@@ -110,7 +110,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 3, 8_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: DevOps Engineer with expertise in bash scripting and Python tooling | Task: Create `scripts/check_python_complexity.sh` bash script following requirements 3 and 8, implementing the workflow specified in design.md Component 3: run radon cc with JSON output, call parser script with threshold 10 | Restrictions: Must use #!/bin/bash shebang, must use 'set -e', do not hardcode paths, check if radon is installed before running, ensure cross-platform compatibility | _Leverage: design.md Component 3 for exact implementation_ | Success: Script is executable, runs radon correctly with proper options, handles missing radon gracefully with error message, calls parser script with correct arguments, exits with appropriate code | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 8. Create Python complexity parser script
+- [x] 8. Create Python complexity parser script
   - File: `scripts/parse_python_complexity.py`
   - Create Python script to parse radon JSON output
   - Accept JSON file path and complexity threshold as arguments
