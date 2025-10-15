@@ -135,7 +135,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 4_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in file parsing and validation | Task: Create `scripts/validate_line_count.py` script following requirement 4, validating file line counts ≤400 lines excluding comments, blank lines, test files, and generated code as specified in design.md Component 4 | Restrictions: Must use #!/usr/bin/env python3 shebang, stdlib only, must handle both .rs and .py file formats, must exclude patterns: test_, _test., target/, venv/, __pycache__, do not count comments or blank lines | _Leverage: design.md Component 4 for implementation, structure.md for file size guidelines_ | Success: Script is executable, correctly counts lines for both Rust and Python, excludes appropriate files, provides clear violation reports with file paths and line counts, exits with proper codes | Instructions: After creating the script, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 10. Create function size validator script
+- [x] 10. Create function size validator script
   - File: `scripts/validate_function_size.py`
   - Create Python script to validate function sizes ≤30 lines
   - Accept list of file paths as arguments
