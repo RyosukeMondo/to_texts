@@ -65,7 +65,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 6, 8_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in code quality and linting | Task: Create `.flake8` configuration file in repository root following requirements 6 and 8, setting max-line-length 100, max-complexity 10, and exclusions as specified in design.md Configuration Files section | Restrictions: Must use INI format, ensure compatibility with flake8 ≥7.0.0, do not conflict with black formatting rules (extend-ignore E203, W503), exclude appropriate directories | _Leverage: design.md "Configuration Files - Flake8 Configuration" for exact content_ | Success: File created with correct INI syntax, all settings match design specifications, flake8 can parse configuration without errors, exclusions cover build artifacts and virtual environments | Instructions: After creating the file, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 4. Extend Rust Cargo.toml with clippy lints
+- [x] 4. Extend Rust Cargo.toml with clippy lints
   - File: `packages/rust/Cargo.toml`
   - Add [workspace.lints.clippy] section to existing workspace Cargo.toml
   - Configure clippy warnings: all, pedantic
