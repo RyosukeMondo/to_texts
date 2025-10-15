@@ -1,0 +1,19 @@
+[package]
+name = "text-extractor"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI tool to extract text from PDF and EPUB files"
+
+[[bin]]
+name = "text-extractor"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+anyhow.workspace = true
+walkdir.workspace = true
+pdf-extract = "0.7"
+epub = "2.1"

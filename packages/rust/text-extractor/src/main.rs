@@ -90,60 +90,9 @@ fn main() -> Result<()> {
 }
 
 fn extract_pdf_text(pdf_path: &Path, output_dir: &Path) -> Result<PathBuf> {
-    use pdf::file::FileOptions;
-    use pdf::content::Op;
-
-    let file = FileOptions::cached()
-        .open(pdf_path)
-        .context(format!("Failed to open PDF: {}", pdf_path.display()))?;
-
-    let resolver = file.resolver();
-    let mut text = String::new();
-
-    // Extract text from each page
-    for page_num in 0..file.num_pages() {
-        text.push_str(&format!("\n\n--- Page {} ---\n\n", page_num + 1));
-
-        match file.get_page(page_num) {
-            Ok(page) => {
-                if let Some(ref contents) = page.contents {
-                    match contents.operations(&resolver) {
-                        Ok(ops) => {
-                            for op in ops {
-                                match op {
-                                    Op::TextDraw { text: text_draw } => {
-                                        let string = String::from_utf8_lossy(&text_draw.data);
-                                        text.push_str(&string);
-                                        text.push(' ');
-                                    }
-                                    Op::TextDrawAdjusted { array } => {
-                                        for item in array.iter() {
-                                            match item {
-                                                pdf::content::TextDrawAdjusted::Text(pdf_string) => {
-                                                    let string = String::from_utf8_lossy(&pdf_string.data);
-                                                    text.push_str(&string);
-                                                }
-                                                pdf::content::TextDrawAdjusted::Spacing(_) => {
-                                                    text.push(' ');
-                                                }
-                                            }
-                                        }
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            eprintln!("  Warning: Failed to read operations on page {}: {}", page_num + 1, e);
-                        }
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("  Warning: Failed to read page {}: {}", page_num + 1, e);
-            }
-        }
-    }
+    // Extract text using pdf-extract which properly handles encodings
+    let text = pdf_extract::extract_text(pdf_path)
+        .context(format!("Failed to extract text from PDF: {}", pdf_path.display()))?;
 
     // Generate output file path
     let output_path = generate_output_path(pdf_path, output_dir, "txt")?;
