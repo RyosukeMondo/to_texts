@@ -26,18 +26,31 @@ fn main() -> Result<()> {
     }
 
     // Create output directory if it doesn't exist
-    fs::create_dir_all(&args.output)
-        .context(format!("Failed to create output directory: {}", args.output.display()))?;
+    fs::create_dir_all(&args.output).context(format!(
+        "Failed to create output directory: {}",
+        args.output.display()
+    ))?;
 
-    println!("Searching for PDF and EPUB files in: {}", args.target.display());
+    println!(
+        "Searching for PDF and EPUB files in: {}",
+        args.target.display()
+    );
     println!("Output directory: {}", args.output.display());
     println!();
 
+    let (processed_count, error_count) = process_directory(&args.target, &args.output)?;
+
+    print_summary(processed_count, error_count);
+
+    Ok(())
+}
+
+fn process_directory(target: &Path, output: &Path) -> Result<(usize, usize)> {
     let mut processed_count = 0;
     let mut error_count = 0;
 
     // Walk through the directory recursively
-    for entry in WalkDir::new(&args.target)
+    for entry in WalkDir::new(target)
         .follow_links(true)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -48,58 +61,71 @@ fn main() -> Result<()> {
             continue;
         }
 
-        let extension = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-
-        match extension.to_lowercase().as_str() {
-            "pdf" => {
-                println!("Processing PDF: {}", path.display());
-                match extract_pdf_text(path, &args.output) {
-                    Ok(output_path) => {
-                        println!("  -> Saved to: {}", output_path.display());
+        if let Some(extension) = path.extension().and_then(|s| s.to_str()) {
+            match extension.to_lowercase().as_str() {
+                "pdf" | "epub" => {
+                    if process_file(path, output, extension) {
                         processed_count += 1;
-                    }
-                    Err(e) => {
-                        eprintln!("  -> Error: {}", e);
+                    } else {
                         error_count += 1;
                     }
                 }
+                _ => continue,
             }
-            "epub" => {
-                println!("Processing EPUB: {}", path.display());
-                match extract_epub_text(path, &args.output) {
-                    Ok(output_path) => {
-                        println!("  -> Saved to: {}", output_path.display());
-                        processed_count += 1;
-                    }
-                    Err(e) => {
-                        eprintln!("  -> Error: {}", e);
-                        error_count += 1;
-                    }
-                }
-            }
-            _ => continue,
         }
     }
 
+    Ok((processed_count, error_count))
+}
+
+fn process_file(path: &Path, output: &Path, extension: &str) -> bool {
+    let file_type = extension.to_lowercase();
+    println!(
+        "Processing {}: {}",
+        file_type.to_uppercase(),
+        path.display()
+    );
+
+    let result = match file_type.as_str() {
+        "pdf" => extract_pdf_text(path, output),
+        "epub" => extract_epub_text(path, output),
+        _ => return false,
+    };
+
+    match result {
+        Ok(output_path) => {
+            println!("  -> Saved to: {}", output_path.display());
+            true
+        }
+        Err(e) => {
+            eprintln!("  -> Error: {}", e);
+            false
+        }
+    }
+}
+
+fn print_summary(processed_count: usize, error_count: usize) {
     println!();
     println!("Summary:");
     println!("  Successfully processed: {}", processed_count);
     println!("  Errors: {}", error_count);
-
-    Ok(())
 }
 
 fn extract_pdf_text(pdf_path: &Path, output_dir: &Path) -> Result<PathBuf> {
     // Extract text using pdf-extract which properly handles encodings
-    let text = pdf_extract::extract_text(pdf_path)
-        .context(format!("Failed to extract text from PDF: {}", pdf_path.display()))?;
+    let text = pdf_extract::extract_text(pdf_path).context(format!(
+        "Failed to extract text from PDF: {}",
+        pdf_path.display()
+    ))?;
 
     // Generate output file path
     let output_path = generate_output_path(pdf_path, output_dir, "txt")?;
 
     // Write extracted text to file
-    fs::write(&output_path, text)
-        .context(format!("Failed to write output file: {}", output_path.display()))?;
+    fs::write(&output_path, text).context(format!(
+        "Failed to write output file: {}",
+        output_path.display()
+    ))?;
 
     Ok(output_path)
 }
@@ -111,50 +137,67 @@ fn extract_epub_text(epub_path: &Path, output_dir: &Path) -> Result<PathBuf> {
     let mut text = String::new();
 
     // Extract metadata
+    append_metadata(&doc, &mut text);
+
+    // Extract text from all resources
+    extract_resources(&mut doc, &mut text);
+
+    // Generate output file path and write
+    let output_path = generate_output_path(epub_path, output_dir, "txt")?;
+    fs::write(&output_path, text).context(format!(
+        "Failed to write output file: {}",
+        output_path.display()
+    ))?;
+
+    Ok(output_path)
+}
+
+fn append_metadata(doc: &epub::doc::EpubDoc<std::io::BufReader<std::fs::File>>, text: &mut String) {
     if let Some(title) = doc.mdata("title") {
         text.push_str("Title: ");
         text.push_str(&title);
-        text.push_str("\n");
+        text.push('\n');
     }
     if let Some(creator) = doc.mdata("creator") {
         text.push_str("Author: ");
         text.push_str(&creator);
-        text.push_str("\n");
+        text.push('\n');
     }
-    text.push_str("\n");
-    text.push_str("=" .repeat(80).as_str());
+    text.push('\n');
+    text.push_str("=".repeat(80).as_str());
     text.push_str("\n\n");
+}
 
-    // Extract text from all resources
+fn extract_resources(
+    doc: &mut epub::doc::EpubDoc<std::io::BufReader<std::fs::File>>,
+    text: &mut String,
+) {
     let resources = doc.resources.clone();
 
     for (resource_id, (file_path, mime_type)) in resources.iter() {
-        let path_str = file_path.to_string_lossy();
-
-        // Only process HTML/XHTML content
-        if mime_type.starts_with("application/xhtml") || mime_type.starts_with("text/html")
-            || path_str.ends_with(".xhtml") || path_str.ends_with(".html") {
-            // Use resource_id to get the content, not the file path
+        if is_html_content(mime_type, &file_path.to_string_lossy()) {
             if let Some((content, _)) = doc.get_resource_str(resource_id) {
-                // Basic HTML tag stripping (simple approach)
                 let cleaned = strip_html_tags(&content);
                 text.push_str(&cleaned);
                 text.push_str("\n\n");
             }
         }
     }
+}
 
-    // Generate output file path
-    let output_path = generate_output_path(epub_path, output_dir, "txt")?;
-
-    // Write extracted text to file
-    fs::write(&output_path, text)
-        .context(format!("Failed to write output file: {}", output_path.display()))?;
-
-    Ok(output_path)
+fn is_html_content(mime_type: &str, path_str: &str) -> bool {
+    mime_type.starts_with("application/xhtml")
+        || mime_type.starts_with("text/html")
+        || path_str.ends_with(".xhtml")
+        || path_str.ends_with(".html")
 }
 
 fn strip_html_tags(html: &str) -> String {
+    let raw_text = extract_text_from_html(html);
+    clean_whitespace(&raw_text)
+}
+
+fn extract_text_from_html(html: &str) -> String {
     let mut result = String::new();
     let mut in_tag = false;
     let mut in_script_style = false;
@@ -166,18 +209,11 @@ fn strip_html_tags(html: &str) -> String {
             tag_name.clear();
         } else if ch == '>' {
             in_tag = false;
-
-            // Check if entering script or style tag
-            let tag_lower = tag_name.to_lowercase();
-            if tag_lower == "script" || tag_lower == "style" {
-                in_script_style = true;
-            } else if tag_lower == "/script" || tag_lower == "/style" {
-                in_script_style = false;
-            }
-
+            in_script_style = update_script_style_state(&tag_name, in_script_style);
             tag_name.clear();
         } else if in_tag {
-            if tag_name.len() < 20 {  // Limit tag name length
+            if tag_name.len() < 20 {
+                // Limit tag name length
                 tag_name.push(ch);
             }
         } else if !in_script_style {
@@ -185,9 +221,22 @@ fn strip_html_tags(html: &str) -> String {
         }
     }
 
-    // Clean up whitespace
     result
-        .split('\n')
+}
+
+fn update_script_style_state(tag_name: &str, current_state: bool) -> bool {
+    let tag_lower = tag_name.to_lowercase();
+    if tag_lower == "script" || tag_lower == "style" {
+        true
+    } else if tag_lower == "/script" || tag_lower == "/style" {
+        false
+    } else {
+        current_state
+    }
+}
+
+fn clean_whitespace(text: &str) -> String {
+    text.split('\n')
         .map(|line| line.trim())
         .filter(|line| !line.is_empty())
         .collect::<Vec<_>>()

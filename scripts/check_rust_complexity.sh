@@ -48,4 +48,4 @@ if ! rust-code-analysis-cli --metrics -O json -p "$RUST_SRC_PATH" > "$TEMP_METRI
 fi
 
 # Parse JSON output and check for complexity violations
-python3 "$PARSER_SCRIPT" "$TEMP_METRICS_FILE" "$COMPLEXITY_THRESHOLD"
+python3 "$PARSER_SCRIPT" "$TEMP_METRICS_FILE" --threshold "$COMPLEXITY_THRESHOLD"
