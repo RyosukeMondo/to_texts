@@ -194,7 +194,7 @@ Tasks 13-20 (type hints and complexity refactoring) are designed to proactively 
   - _Requirements: 2_
   - _Prompt: Implement the task for spec qa-compliance, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in type hints and API clients | Task: Add comprehensive type hints to `packages/python/zlibrary-downloader/zlibrary_downloader/client.py` (362 lines) following requirement 2, annotating all methods in Zlibrary class including private methods, ensuring mypy strict mode compliance | Restrictions: Must use proper types for dict returns (consider TypedDict for structured responses), use Optional for nullable parameters, use Union for multiple types, maintain existing method signatures except for type annotations, do not break existing functionality | _Leverage: Existing client.py code (read file first), requests library type stubs, typing module_ | Success: All methods have complete type annotations including parameters and return types, private methods are typed, mypy --strict passes with zero errors, TypedDict or proper dict types used for structured data | Instructions: After adding type hints and verifying with mypy, edit tasks.md to change this task from [ ] to [x] when complete_
 
-- [ ] 15. Add type hints to zlibrary_downloader/cli.py
+- [x] 15. Add type hints to zlibrary_downloader/cli.py
   - File: `packages/python/zlibrary-downloader/zlibrary_downloader/cli.py`
   - Add type annotations to all functions (main, command_line_mode, interactive_mode, etc.)
   - Add type hints for function parameters (z_client, args, etc.)
