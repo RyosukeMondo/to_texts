@@ -276,3 +276,154 @@ class TestArgumentParser:
         parser = cli.create_argument_parser()
         assert "zlibrary_credentials.toml" in parser.epilog
         assert "TOML" in parser.epilog or "toml" in parser.epilog
+
+
+class TestAutomaticRotation:
+    """Test suite for automatic credential rotation after operations."""
+
+    def test_search_books_rotates_after_success(self) -> None:
+        """Test that search_books rotates to next credential after successful search."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+
+        # Mock credentials
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        cred2 = Credential(identifier="cred2", email="test2@example.com", password="pass2")
+        mock_cm.get_current.return_value = cred1
+        mock_cm.rotate.return_value = cred2
+
+        result = cli.search_books(mock_client, "test query", mock_pool)
+
+        # Verify search was called
+        mock_client.search.assert_called_once()
+        assert result is not None
+
+        # Verify rotation occurred
+        mock_cm.rotate.assert_called_once()
+
+    def test_search_books_without_pool_no_rotation(self) -> None:
+        """Test that search_books works without client_pool (no rotation)."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        result = cli.search_books(mock_client, "test query", client_pool=None)
+
+        mock_client.search.assert_called_once()
+        assert result is not None
+
+    def test_search_books_rotation_all_exhausted(self, capsys: pytest.CaptureFixture) -> None:
+        """Test search_books handles case when all credentials are exhausted."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        mock_cm.get_current.return_value = cred1
+        mock_cm.rotate.return_value = None  # All exhausted
+
+        result = cli.search_books(mock_client, "test query", mock_pool)
+
+        assert result is not None
+        mock_cm.rotate.assert_called_once()
+
+    def test_download_book_updates_limits_and_rotates(self, tmp_path: Path) -> None:
+        """Test that download_book updates download limits and rotates credential."""
+        mock_client = Mock()
+        mock_client.downloadBook.return_value = ("test.pdf", b"fake pdf content")
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+
+        cred1 = Credential(
+            identifier="cred1",
+            email="test1@example.com",
+            password="pass1",
+            downloads_left=5
+        )
+        cred2 = Credential(identifier="cred2", email="test2@example.com", password="pass2")
+
+        mock_cm.get_current.return_value = cred1
+        mock_cm.update_downloads_left.return_value = (True, None)
+        mock_cm.rotate.return_value = cred2
+
+        book = {"title": "Test Book", "id": "123"}
+        result = cli.download_book(mock_client, book, mock_pool, str(tmp_path))
+
+        # Verify download occurred
+        mock_client.downloadBook.assert_called_once_with(book)
+        assert result is not None
+        assert (tmp_path / "test.pdf").exists()
+
+        # Verify download limits updated
+        mock_cm.update_downloads_left.assert_called_once_with(cred1)
+
+        # Verify rotation occurred
+        mock_cm.rotate.assert_called_once()
+
+    def test_download_book_handles_update_failure(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Test download_book handles failure to update download limits gracefully."""
+        mock_client = Mock()
+        mock_client.downloadBook.return_value = ("test.pdf", b"fake pdf content")
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        cred2 = Credential(identifier="cred2", email="test2@example.com", password="pass2")
+
+        mock_cm.get_current.return_value = cred1
+        mock_cm.update_downloads_left.return_value = (False, "API error")
+        mock_cm.rotate.return_value = cred2
+
+        book = {"title": "Test Book"}
+        result = cli.download_book(mock_client, book, mock_pool, str(tmp_path))
+
+        # Download should still succeed even if limit update fails
+        assert result is not None
+        mock_cm.rotate.assert_called_once()
+
+    def test_download_book_exhaustion_warning(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Test download_book displays warning when all credentials exhausted."""
+        mock_client = Mock()
+        mock_client.downloadBook.return_value = ("test.pdf", b"fake pdf content")
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        mock_cm.get_current.return_value = cred1
+        mock_cm.update_downloads_left.return_value = (True, None)
+        mock_cm.rotate.return_value = None  # All exhausted
+
+        book = {"title": "Test Book"}
+        result = cli.download_book(mock_client, book, mock_pool, str(tmp_path))
+
+        assert result is not None
+        captured = capsys.readouterr()
+        assert "All credentials exhausted" in captured.out
+
+    def test_download_book_without_pool_no_rotation(self, tmp_path: Path) -> None:
+        """Test download_book works without client_pool (no rotation)."""
+        mock_client = Mock()
+        mock_client.downloadBook.return_value = ("test.pdf", b"fake pdf content")
+
+        book = {"title": "Test Book"}
+        result = cli.download_book(mock_client, book, client_pool=None, download_dir=str(tmp_path))
+
+        mock_client.downloadBook.assert_called_once_with(book)
+        assert result is not None
+        assert (tmp_path / "test.pdf").exists()

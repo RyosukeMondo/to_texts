@@ -146,7 +146,7 @@
   - _Requirements: 1.1, 1.3, 1.4, 1.5, 5.1, 5.2, 5.3, 5.4_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Full-stack Python Developer with CLI application expertise | Task: Refactor CLI in packages/python/zlibrary-downloader/zlibrary_downloader/cli.py to integrate CredentialManager and ClientPool following requirements 1.1, 1.3, 1.4, 1.5, 5.1, 5.2, 5.3, and 5.4. Update initialization, add credential status display, maintain backward compatibility. | Restrictions: Do not break existing CLI interface, maintain backward compatibility with single credential, preserve existing command-line arguments, follow existing CLI patterns | Success: CLI initializes with CredentialManager and ClientPool, displays credential status on startup, single-credential format still works, help text updated. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 12. Implement Automatic Rotation in Operations
+- [x] 12. Implement Automatic Rotation in Operations
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/cli.py (extend)
   - Add rotation call after successful search_books() operation
   - Add rotation call after successful download_book() operation

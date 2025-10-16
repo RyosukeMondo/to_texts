@@ -8,10 +8,17 @@ Supports both TOML (multiple credentials) and .env (single credential) formats
 import os
 import sys
 import argparse
+import logging
 from typing import Optional, Any, List, Dict
 from .client import Zlibrary
 from .credential_manager import CredentialManager
 from .client_pool import ZlibraryClientPool
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Try to import TUI module (optional)
 try:
@@ -121,34 +128,75 @@ def display_credential_status(credential_manager: CredentialManager) -> None:
     print("=" * 60)
 
 
-def search_books(z_client: Zlibrary, query: str, **kwargs: Any) -> Optional[Dict[str, Any]]:
-    """Search for books on Z-Library with optional filters"""
-    print(f"\nSearching for: {query}")
-
-    # Build search parameters
+def _build_search_params(query: str, **kwargs: Any) -> Dict[str, Any]:
+    """Build search parameters dictionary from query and kwargs."""
     search_params: Dict[str, Any] = {"message": query}
 
+    # Map of kwargs to search parameter names
+    param_mapping = {
+        "format": "extensions",
+        "year_from": "yearFrom",
+        "year_to": "yearTo",
+        "language": "languages",
+        "order": "order",
+        "limit": "limit",
+        "page": "page",
+    }
+
     # Add optional parameters if provided
-    if kwargs.get("format"):
-        search_params["extensions"] = kwargs["format"]
-    if kwargs.get("year_from"):
-        search_params["yearFrom"] = kwargs["year_from"]
-    if kwargs.get("year_to"):
-        search_params["yearTo"] = kwargs["year_to"]
-    if kwargs.get("language"):
-        search_params["languages"] = kwargs["language"]
-    if kwargs.get("order"):
-        search_params["order"] = kwargs["order"]
-    if kwargs.get("limit"):
-        search_params["limit"] = kwargs["limit"]
-    if kwargs.get("page"):
-        search_params["page"] = kwargs["page"]
+    for kwarg_name, param_name in param_mapping.items():
+        if kwargs.get(kwarg_name):
+            search_params[param_name] = kwargs[kwarg_name]
+
+    return search_params
+
+
+def _rotate_after_operation(client_pool: ZlibraryClientPool, operation: str) -> None:
+    """Rotate to next credential after successful operation."""
+    current_cred = client_pool.credential_manager.get_current()
+    if current_cred:
+        logger.info(f"{operation} successful with credential: {current_cred.identifier}")
+
+    next_cred = client_pool.credential_manager.rotate()
+    if next_cred:
+        logger.info(f"Rotated to next credential: {next_cred.identifier}")
+    else:
+        logger.warning("All credentials exhausted - cannot rotate")
+
+
+def search_books(
+    z_client: Zlibrary, query: str, client_pool: Optional[ZlibraryClientPool] = None, **kwargs: Any
+) -> Optional[Dict[str, Any]]:
+    """
+    Search for books on Z-Library with optional filters.
+
+    Automatically rotates to next credential after successful search when
+    using multi-credential setup.
+
+    Args:
+        z_client: Z-Library client to use for search
+        query: Search query string
+        client_pool: Optional client pool for credential rotation
+        **kwargs: Additional search parameters (format, year_from, year_to, etc.)
+
+    Returns:
+        Optional[Dict[str, Any]]: Search results or None if search failed
+    """
+    print(f"\nSearching for: {query}")
+
+    search_params = _build_search_params(query, **kwargs)
 
     try:
         results = z_client.search(**search_params)
+
+        # Rotate to next credential after successful search
+        if results and client_pool:
+            _rotate_after_operation(client_pool, "Search")
+
         return results
     except Exception as e:
         print(f"Error searching: {e}")
+        logger.error(f"Search failed: {e}")
         return None
 
 
@@ -172,10 +220,56 @@ def display_results(results: Optional[Dict[str, Any]]) -> None:
         print()
 
 
+def _update_download_limits(client_pool: ZlibraryClientPool) -> None:
+    """Update download limits for current credential and log results."""
+    current_cred = client_pool.credential_manager.get_current()
+    if not current_cred:
+        return
+
+    logger.info(f"Download successful with credential: {current_cred.identifier}")
+
+    success, error = client_pool.credential_manager.update_downloads_left(current_cred)
+    if success and current_cred.downloads_left is not None:
+        logger.info(
+            f"Downloads remaining for {current_cred.identifier}: "
+            f"{current_cred.downloads_left}"
+        )
+        print(f"Downloads remaining: {current_cred.downloads_left}")
+    elif error:
+        logger.warning(f"Could not update download limits: {error}")
+
+
+def _rotate_after_download(client_pool: ZlibraryClientPool) -> None:
+    """Rotate to next credential after download."""
+    next_cred = client_pool.credential_manager.rotate()
+    if next_cred:
+        logger.info(f"Rotated to next credential: {next_cred.identifier}")
+    else:
+        logger.warning("All credentials exhausted - cannot rotate")
+        print("\nWarning: All credentials exhausted. No more downloads available.")
+
+
 def download_book(
-    z_client: Zlibrary, book: Dict[str, Any], download_dir: str = "downloads"
+    z_client: Zlibrary,
+    book: Dict[str, Any],
+    client_pool: Optional[ZlibraryClientPool] = None,
+    download_dir: str = "downloads",
 ) -> Optional[str]:
-    """Download a book"""
+    """
+    Download a book from Z-Library.
+
+    Automatically rotates to next credential and updates download limits
+    after successful download when using multi-credential setup.
+
+    Args:
+        z_client: Z-Library client to use for download
+        book: Book metadata dictionary
+        client_pool: Optional client pool for credential rotation
+        download_dir: Directory to save downloaded books
+
+    Returns:
+        Optional[str]: Path to downloaded file or None if download failed
+    """
     # Create downloads directory if it doesn't exist
     os.makedirs(download_dir, exist_ok=True)
 
@@ -185,6 +279,7 @@ def download_book(
 
         if download_result is None:
             print("Error: Download failed (no content returned)")
+            logger.error("Download failed - no content returned")
             return None
 
         filename, filecontent = download_result
@@ -195,47 +290,62 @@ def download_book(
             bookfile.write(filecontent)
 
         print(f"Successfully downloaded to: {filepath}")
+
+        # Update download limits and rotate after successful download
+        if client_pool:
+            _update_download_limits(client_pool)
+            _rotate_after_download(client_pool)
+
         return filepath
     except Exception as e:
         print(f"Error downloading book: {e}")
+        logger.error(f"Download failed: {e}")
         return None
 
 
-def prompt_for_download(z_client: Zlibrary, books: List[Dict[str, Any]]) -> None:
+def prompt_for_download(
+    z_client: Zlibrary,
+    books: List[Dict[str, Any]],
+    client_pool: Optional[ZlibraryClientPool] = None,
+) -> None:
     """Prompt user to select and download a book from the list"""
     download_choice = input("\nEnter book number to download (or 'n' to skip): ").strip()
     if download_choice.lower() != "n":
         try:
             book_idx = int(download_choice) - 1
             if 0 <= book_idx < len(books):
-                download_book(z_client, books[book_idx])
+                download_book(z_client, books[book_idx], client_pool)
             else:
                 print("Invalid book number")
         except ValueError:
             print("Invalid input")
 
 
-def handle_search_mode(z_client: Zlibrary) -> None:
+def handle_search_mode(
+    z_client: Zlibrary, client_pool: Optional[ZlibraryClientPool] = None
+) -> None:
     """Handle the search books option"""
     query = input("Enter search query: ").strip()
     if not query:
         print("Search query cannot be empty")
         return
 
-    results = search_books(z_client, query)
+    results = search_books(z_client, query, client_pool)
     if results and "books" in results and results["books"]:
         display_results(results)
-        prompt_for_download(z_client, results["books"])
+        prompt_for_download(z_client, results["books"], client_pool)
 
 
-def handle_popular_mode(z_client: Zlibrary) -> None:
+def handle_popular_mode(
+    z_client: Zlibrary, client_pool: Optional[ZlibraryClientPool] = None
+) -> None:
     """Handle the popular books option"""
     try:
         print("\nFetching most popular books...")
         popular = z_client.getMostPopular()
         if popular and "books" in popular:
             display_results(popular)
-            prompt_for_download(z_client, popular["books"])
+            prompt_for_download(z_client, popular["books"], client_pool)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -252,7 +362,7 @@ def handle_profile_mode(z_client: Zlibrary) -> None:
         print(f"Error: {e}")
 
 
-def interactive_mode(z_client: Zlibrary) -> None:
+def interactive_mode(z_client: Zlibrary, client_pool: Optional[ZlibraryClientPool] = None) -> None:
     """Interactive mode for searching and downloading books"""
     while True:
         print("\n" + "=" * 60)
@@ -266,9 +376,9 @@ def interactive_mode(z_client: Zlibrary) -> None:
         choice = input("\nEnter your choice (1-4): ").strip()
 
         if choice == "1":
-            handle_search_mode(z_client)
+            handle_search_mode(z_client, client_pool)
         elif choice == "2":
-            handle_popular_mode(z_client)
+            handle_popular_mode(z_client, client_pool)
         elif choice == "3":
             handle_profile_mode(z_client)
         elif choice == "4":
@@ -300,24 +410,29 @@ def build_search_kwargs(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 def handle_search_results(
-    z_client: Zlibrary, results: Optional[Dict[str, Any]], download: bool
+    z_client: Zlibrary,
+    results: Optional[Dict[str, Any]],
+    download: bool,
+    client_pool: Optional[ZlibraryClientPool] = None,
 ) -> None:
     """Handle search results and optional download"""
     if results and "books" in results and results["books"]:
         display_results(results)
         if download:
             print("\nDownloading first result...")
-            download_book(z_client, results["books"][0])
+            download_book(z_client, results["books"][0], client_pool)
     else:
         print("No results found.")
         sys.exit(1)
 
 
-def command_line_mode(z_client: Zlibrary, args: argparse.Namespace) -> None:
+def command_line_mode(
+    z_client: Zlibrary, args: argparse.Namespace, client_pool: Optional[ZlibraryClientPool] = None
+) -> None:
     """Command line mode for direct search and optional download"""
     search_kwargs = build_search_kwargs(args)
-    results = search_books(z_client, args.title, **search_kwargs)
-    handle_search_results(z_client, results, args.download)
+    results = search_books(z_client, args.title, client_pool, **search_kwargs)
+    handle_search_results(z_client, results, args.download, client_pool)
 
 
 def tui_mode(z_client: Zlibrary) -> None:
@@ -408,23 +523,25 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def select_and_run_mode(z_client: Zlibrary, args: argparse.Namespace) -> None:
+def select_and_run_mode(
+    z_client: Zlibrary, args: argparse.Namespace, client_pool: Optional[ZlibraryClientPool] = None
+) -> None:
     """Determine which mode to use and run it"""
     if args.title:
         # CLI mode with direct search
-        command_line_mode(z_client, args)
+        command_line_mode(z_client, args, client_pool)
     elif args.tui:
         # TUI mode (rich interactive)
         tui_mode(z_client)
     elif args.classic:
         # Classic interactive mode
-        interactive_mode(z_client)
+        interactive_mode(z_client, client_pool)
     else:
         # Default: Use TUI if available, otherwise classic
         if TUI_AVAILABLE:
             tui_mode(z_client)
         else:
-            interactive_mode(z_client)
+            interactive_mode(z_client, client_pool)
 
 
 def main() -> None:
@@ -446,7 +563,7 @@ def main() -> None:
     print("\nLogin successful!")
 
     # Run the appropriate mode
-    select_and_run_mode(z_client, args)
+    select_and_run_mode(z_client, args, client_pool)
 
 
 if __name__ == "__main__":
