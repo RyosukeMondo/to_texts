@@ -185,7 +185,7 @@
 
 ## Phase 3: Documentation and Testing
 
-- [ ] 15. Create zlibrary_credentials.toml.example
+- [x] 15. Create zlibrary_credentials.toml.example
   - File: packages/python/zlibrary-downloader/zlibrary_credentials.toml.example
   - Create TOML example file with multiple credential examples
   - Show email/password authentication format
