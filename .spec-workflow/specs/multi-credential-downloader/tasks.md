@@ -76,7 +76,7 @@
   - _Requirements: 1.1, 2.1, 2.2, 2.3, 5.1_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer specializing in business logic and configuration management | Task: Create CredentialManager class in packages/python/zlibrary-downloader/zlibrary_downloader/credential_manager.py following requirements 1.1, 2.1, 2.2, 2.3, and 5.1. Implement auto-detection of configuration source (zlibrary_credentials.toml or .env), TOML parsing using tomllib (Python 3.11+) or tomli (older versions), and maintain backward compatibility with single-credential .env format. Implement rotation logic with wrap-around and state persistence integration. | Restrictions: Must support backward compatibility with single-credential .env, handle edge cases like all credentials exhausted, skip disabled credentials in TOML, follow single responsibility principle, use try/except for tomllib import fallback | Success: Credentials load from TOML file with unlimited accounts, .env single-credential format still works, rotation works with proper wrap-around, state persists correctly, disabled credentials are filtered out. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 7. Implement Credential Validation
+- [x] 7. Implement Credential Validation
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/credential_manager.py (extend)
   - Add validate_credential() method that tests credential with Zlibrary client
   - Use getProfile() API call to verify credential validity

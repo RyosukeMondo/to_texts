@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import requests
+
 # Import tomllib (Python 3.11+) or tomli (older versions)
 if sys.version_info >= (3, 11):
     import tomllib
@@ -335,3 +337,141 @@ class CredentialManager:
 
         with contextlib.suppress(Exception):
             self.rotation_state.save(self.current_index, credentials_data)
+
+    def _validate_profile_response(
+        self, credential: Credential, profile_response: Any
+    ) -> tuple[bool, Optional[str]]:
+        """Validate profile response and update credential status."""
+        from datetime import datetime
+
+        if not profile_response:
+            credential.status = CredentialStatus.INVALID
+            credential.last_validated = datetime.now()
+            return False, "Authentication failed: Empty response from API"
+
+        if not profile_response.get("success", False):
+            credential.status = CredentialStatus.INVALID
+            credential.last_validated = datetime.now()
+            error_msg = profile_response.get("error", "Unknown authentication error")
+            return False, f"Authentication failed: {error_msg}"
+
+        credential.status = CredentialStatus.VALID
+        credential.last_validated = datetime.now()
+        self._update_downloads_from_profile(credential, profile_response)
+        return True, None
+
+    def _handle_validation_error(
+        self, credential: Credential, error: Exception, attempt: int, max_retries: int
+    ) -> tuple[bool, Optional[str]]:
+        """Handle validation errors with retry logic."""
+        from datetime import datetime
+
+        should_retry = attempt < max_retries - 1
+        is_network_error = isinstance(
+            error, (requests.exceptions.Timeout, requests.exceptions.RequestException)
+        )
+
+        if is_network_error and should_retry:
+            return True, None  # Signal to retry
+
+        credential.status = CredentialStatus.INVALID
+        credential.last_validated = datetime.now()
+
+        if isinstance(error, requests.exceptions.Timeout):
+            return False, f"Timeout after {max_retries} attempts: {str(error)}"
+        if isinstance(error, requests.exceptions.RequestException):
+            return False, f"Network error after {max_retries} attempts: {str(error)}"
+        return False, f"Unexpected error during validation: {str(error)}"
+
+    def validate_credential(
+        self, credential: Credential, max_retries: int = 2
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Validate a credential by testing it with the Z-Library API.
+
+        Uses getProfile() API call to verify credential validity and fetch download limits.
+        Implements retry logic for network errors.
+
+        Args:
+            credential: The credential to validate
+            max_retries: Maximum number of retry attempts (default: 2)
+
+        Returns:
+            tuple[bool, Optional[str]]: (is_valid, error_message)
+
+        Side effects:
+            - Updates credential.status based on validation result
+            - Updates credential.last_validated timestamp
+            - Updates credential.downloads_left if validation successful
+        """
+        from .client import Zlibrary
+
+        for attempt in range(max_retries):
+            try:
+                client = Zlibrary(
+                    email=credential.email,
+                    password=credential.password,
+                    remix_userid=credential.remix_userid,
+                    remix_userkey=credential.remix_userkey,
+                )
+
+                profile_response = client.getProfile()
+                return self._validate_profile_response(credential, profile_response)
+
+            except Exception as e:
+                should_retry, error_msg = self._handle_validation_error(
+                    credential, e, attempt, max_retries
+                )
+                if not should_retry:
+                    return False, error_msg
+
+        return False, "Validation failed: Unknown error"
+
+    def _update_downloads_from_profile(
+        self, credential: Credential, profile_response: Dict[str, Any]
+    ) -> None:
+        """Extract and update download limits from profile response."""
+        user_data = profile_response.get("user", {})
+        downloads_limit = user_data.get("downloads_limit", 10)
+        downloads_today = user_data.get("downloads_today", 0)
+        credential.downloads_left = downloads_limit - downloads_today
+
+        if credential.downloads_left <= 0:
+            credential.status = CredentialStatus.EXHAUSTED
+
+    def update_downloads_left(self, credential: Credential) -> tuple[bool, Optional[str]]:
+        """
+        Update the downloads_left field for a credential.
+
+        Fetches current download limit and usage from Z-Library API.
+
+        Args:
+            credential: The credential to update
+
+        Returns:
+            tuple[bool, Optional[str]]: (success, error_message)
+
+        Side effects:
+            - Updates credential.downloads_left
+            - Updates credential.status if exhausted
+        """
+        from .client import Zlibrary
+
+        try:
+            client = Zlibrary(
+                email=credential.email,
+                password=credential.password,
+                remix_userid=credential.remix_userid,
+                remix_userkey=credential.remix_userkey,
+            )
+
+            profile_response = client.getProfile()
+
+            if not profile_response or not profile_response.get("success", False):
+                return False, "Failed to fetch profile from API"
+
+            self._update_downloads_from_profile(credential, profile_response)
+            return True, None
+
+        except Exception as e:
+            return False, f"Error updating download limits: {str(e)}"

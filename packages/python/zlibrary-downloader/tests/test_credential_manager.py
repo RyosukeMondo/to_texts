@@ -639,3 +639,372 @@ password = "password2"
 
         assert state["current_index"] == 1
         assert len(state["credentials"]) == 2
+
+
+class TestCredentialValidation:
+    """Tests for credential validation methods."""
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_success_with_email_auth(self, mock_zlibrary_class):
+        """Test successful credential validation with email/password."""
+        # Mock the Zlibrary client
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": True,
+            "user": {
+                "email": "test@example.com",
+                "downloads_limit": 10,
+                "downloads_today": 3,
+            },
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+            status=CredentialStatus.VALID,
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential)
+
+        assert is_valid is True
+        assert error_msg is None
+        assert credential.status == CredentialStatus.VALID
+        assert credential.downloads_left == 7  # 10 - 3
+        assert credential.last_validated is not None
+
+        # Verify Zlibrary client was created with correct credentials
+        mock_zlibrary_class.assert_called_once_with(
+            email="test@example.com",
+            password="password123",
+            remix_userid=None,
+            remix_userkey=None,
+        )
+        mock_client.getProfile.assert_called_once()
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_success_with_remix_auth(self, mock_zlibrary_class):
+        """Test successful credential validation with remix tokens."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": True,
+            "user": {
+                "email": "test@example.com",
+                "downloads_limit": 20,
+                "downloads_today": 5,
+            },
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="remix_user",
+            remix_userid="12345",
+            remix_userkey="abcdef123456",
+            status=CredentialStatus.VALID,
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential)
+
+        assert is_valid is True
+        assert error_msg is None
+        assert credential.status == CredentialStatus.VALID
+        assert credential.downloads_left == 15  # 20 - 5
+
+        # Verify Zlibrary client was created with correct credentials
+        mock_zlibrary_class.assert_called_once_with(
+            email=None,
+            password=None,
+            remix_userid="12345",
+            remix_userkey="abcdef123456",
+        )
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_marks_exhausted_when_no_downloads_left(self, mock_zlibrary_class):
+        """Test that credential is marked as EXHAUSTED when downloads_left is 0."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": True,
+            "user": {
+                "downloads_limit": 10,
+                "downloads_today": 10,  # All downloads used
+            },
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential)
+
+        assert is_valid is True  # Validation succeeded
+        assert error_msg is None
+        assert credential.status == CredentialStatus.EXHAUSTED
+        assert credential.downloads_left == 0
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_fails_on_empty_response(self, mock_zlibrary_class):
+        """Test that validation fails on empty API response."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = None
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="wrong_password",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential)
+
+        assert is_valid is False
+        assert "Empty response from API" in error_msg
+        assert credential.status == CredentialStatus.INVALID
+        assert credential.last_validated is not None
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_fails_on_authentication_error(self, mock_zlibrary_class):
+        """Test that validation fails on authentication error."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": False,
+            "error": "Invalid credentials",
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="wrong_password",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential)
+
+        assert is_valid is False
+        assert "Authentication failed" in error_msg
+        assert "Invalid credentials" in error_msg
+        assert credential.status == CredentialStatus.INVALID
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_retries_on_timeout(self, mock_zlibrary_class):
+        """Test that validation retries on timeout errors."""
+        import requests
+
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+
+        # First attempt: timeout, second attempt: success
+        mock_client.getProfile.side_effect = [
+            requests.exceptions.Timeout("Connection timeout"),
+            {
+                "success": True,
+                "user": {
+                    "downloads_limit": 10,
+                    "downloads_today": 2,
+                },
+            },
+        ]
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential, max_retries=2)
+
+        assert is_valid is True
+        assert error_msg is None
+        assert credential.status == CredentialStatus.VALID
+        assert credential.downloads_left == 8
+        # Verify retry happened (2 calls)
+        assert mock_client.getProfile.call_count == 2
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_fails_after_max_retries(self, mock_zlibrary_class):
+        """Test that validation fails after exceeding max retries."""
+        import requests
+
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+
+        # All attempts fail with timeout
+        mock_client.getProfile.side_effect = requests.exceptions.Timeout("Connection timeout")
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential, max_retries=2)
+
+        assert is_valid is False
+        assert "Timeout after 2 attempts" in error_msg
+        assert credential.status == CredentialStatus.INVALID
+        # Verify all retries were attempted
+        assert mock_client.getProfile.call_count == 2
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_retries_on_network_error(self, mock_zlibrary_class):
+        """Test that validation retries on network errors."""
+        import requests
+
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+
+        # First attempt: network error, second attempt: success
+        mock_client.getProfile.side_effect = [
+            requests.exceptions.ConnectionError("Network error"),
+            {
+                "success": True,
+                "user": {
+                    "downloads_limit": 15,
+                    "downloads_today": 3,
+                },
+            },
+        ]
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential, max_retries=2)
+
+        assert is_valid is True
+        assert error_msg is None
+        assert credential.downloads_left == 12
+        assert mock_client.getProfile.call_count == 2
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_validate_credential_fails_on_unexpected_error(self, mock_zlibrary_class):
+        """Test that validation fails immediately on unexpected errors."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+
+        # Unexpected error (not network-related)
+        mock_client.getProfile.side_effect = ValueError("Unexpected error")
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        is_valid, error_msg = manager.validate_credential(credential, max_retries=2)
+
+        assert is_valid is False
+        assert "Unexpected error during validation" in error_msg
+        assert credential.status == CredentialStatus.INVALID
+        # Should not retry on unexpected errors
+        assert mock_client.getProfile.call_count == 1
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_update_downloads_left_success(self, mock_zlibrary_class):
+        """Test successful update of download limits."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": True,
+            "user": {
+                "downloads_limit": 20,
+                "downloads_today": 8,
+            },
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+            downloads_left=10,  # Old value
+        )
+
+        success, error_msg = manager.update_downloads_left(credential)
+
+        assert success is True
+        assert error_msg is None
+        assert credential.downloads_left == 12  # 20 - 8
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_update_downloads_left_marks_exhausted(self, mock_zlibrary_class):
+        """Test that update marks credential as EXHAUSTED when downloads are 0."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": True,
+            "user": {
+                "downloads_limit": 10,
+                "downloads_today": 10,
+            },
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+            status=CredentialStatus.VALID,
+        )
+
+        success, error_msg = manager.update_downloads_left(credential)
+
+        assert success is True
+        assert error_msg is None
+        assert credential.downloads_left == 0
+        assert credential.status == CredentialStatus.EXHAUSTED
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_update_downloads_left_fails_on_api_error(self, mock_zlibrary_class):
+        """Test that update fails gracefully on API error."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.return_value = {
+            "success": False,
+            "error": "API error",
+        }
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        success, error_msg = manager.update_downloads_left(credential)
+
+        assert success is False
+        assert "Failed to fetch profile" in error_msg
+
+    @patch("zlibrary_downloader.client.Zlibrary")
+    def test_update_downloads_left_handles_exception(self, mock_zlibrary_class):
+        """Test that update handles exceptions gracefully."""
+        mock_client = MagicMock()
+        mock_zlibrary_class.return_value = mock_client
+        mock_client.getProfile.side_effect = Exception("Unexpected error")
+
+        manager = CredentialManager()
+        credential = Credential(
+            identifier="test_user",
+            email="test@example.com",
+            password="password123",
+        )
+
+        success, error_msg = manager.update_downloads_left(credential)
+
+        assert success is False
+        assert "Error updating download limits" in error_msg
