@@ -106,7 +106,7 @@
   - _Requirements: 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 4.1, 4.2, 5.1_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in Python testing, mocking, and pytest | Task: Create comprehensive unit tests for CredentialManager in packages/python/zlibrary-downloader/tests/test_credential_manager.py covering requirements 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 4.1, 4.2, and 5.1. Mock Zlibrary client for validation tests, test TOML parsing with multiple accounts, test single-credential .env format for backward compatibility, test disabled credential filtering, rotation logic, and error scenarios including malformed TOML. | Restrictions: Use pytest and unittest.mock, mock external dependencies (Zlibrary client), use tempfile to create test TOML files, test both success and failure paths, ensure test isolation, aim for >80% coverage | Success: All CredentialManager functionality tested including TOML parsing, .env parsing, auto-detection, rotation, validation, disabled credential filtering, and error handling. Tests are reliable and cover edge cases. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 9. Implement Client Pool
+- [x] 9. Implement Client Pool
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/client_pool.py
   - Create ZlibraryClientPool class with credential_manager and clients dict
   - Implement get_current_client() to return cached or create new Zlibrary client
