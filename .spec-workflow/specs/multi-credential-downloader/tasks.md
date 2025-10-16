@@ -13,7 +13,7 @@
   - _Requirements: 1.1, 1.2_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer specializing in data modeling and type systems | Task: Create comprehensive Credential data model in packages/python/zlibrary-downloader/zlibrary_downloader/credential.py with CredentialStatus enum and Credential dataclass following requirements 1.1 and 1.2. The dataclass should use type hints and include methods for availability checking and serialization. | Restrictions: Use Python 3.8+ features, follow PEP 8 naming conventions, do not add external dependencies beyond standard library | Success: Credential model is well-defined with proper type hints, serialization methods work correctly, is_available() logic is sound. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 2. Add TOML Parsing Dependency
+- [x] 2. Add TOML Parsing Dependency
   - File: packages/python/zlibrary-downloader/setup.py or requirements.txt or pyproject.toml
   - Add tomli dependency for Python <3.11 (Python 3.11+ has built-in tomllib)
   - Add conditional dependency: tomli;python_version<"3.11"
