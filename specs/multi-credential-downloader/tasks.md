@@ -3,64 +3,70 @@
 ## Phase 1: Core Infrastructure
 
 ### Task 1: Create Credential Data Model
-- [ ] Define `Credential` dataclass with fields
-- [ ] Define `CredentialStatus` enum (ACTIVE, INACTIVE, EXHAUSTED, ERROR)
-- [ ] Add validation methods to Credential class
-- [ ] Add serialization/deserialization methods
-- [ ] Write unit tests for Credential model
+- [ ] Create `zlibrary_downloader/credential.py`
+- [ ] Define `CredentialStatus` enum
+- [ ] Define `Credential` dataclass with required fields
+- [ ] Add validation methods
+- [ ] Add serialization/deserialization
+- [ ] Write unit tests (`tests/test_credential.py`)
+- [ ] Achieve >80% code coverage
 
-**Files to create/modify:**
-- `zlibrary_downloader/credential.py` (new)
+**Deliverables:**
+- credential.py with Credential and CredentialStatus
+- test_credential.py with comprehensive tests
 
 **Dependencies:** None
 
 ---
 
 ### Task 2: Implement Credential Manager
-- [ ] Create `CredentialManager` class
-- [ ] Implement `load_credentials()` from .env file
-- [ ] Implement credential validation logic
-- [ ] Add support for both email/password and remix token formats
-- [ ] Implement credential status tracking
-- [ ] Add credential filtering (get_available_credentials)
-- [ ] Write comprehensive unit tests
+- [ ] Create `zlibrary_downloader/credential_manager.py`
+- [ ] Implement credential loading from .env
+- [ ] Support single credential format (backward compatible)
+- [ ] Support multiple credential format (ZLIBRARY_ACCOUNT_N_*)
+- [ ] Implement credential validation
+- [ ] Implement rotation logic
+- [ ] Implement credential filtering (get_available)
+- [ ] Write unit tests (`tests/test_credential_manager.py`)
 
-**Files to create/modify:**
-- `zlibrary_downloader/credential_manager.py` (new)
-- Test file: `tests/test_credential_manager.py` (new)
+**Deliverables:**
+- credential_manager.py with CredentialManager class
+- test_credential_manager.py with comprehensive tests
 
 **Dependencies:** Task 1
 
 ---
 
 ### Task 3: Implement State Persistence
+- [ ] Create `zlibrary_downloader/rotation_state.py`
 - [ ] Define state file format (JSON)
 - [ ] Implement state save functionality
 - [ ] Implement state load functionality
-- [ ] Handle missing or corrupted state files
-- [ ] Add state migration logic
-- [ ] Write unit tests for state management
+- [ ] Handle missing state files gracefully
+- [ ] Handle corrupted state files
+- [ ] Implement state validation
+- [ ] Write unit tests (`tests/test_rotation_state.py`)
 
-**Files to create/modify:**
-- `zlibrary_downloader/rotation_state.py` (new)
-- Test file: `tests/test_rotation_state.py` (new)
+**Deliverables:**
+- rotation_state.py with RotationState class
+- test_rotation_state.py with comprehensive tests
 
 **Dependencies:** Task 1
 
 ---
 
 ### Task 4: Implement Client Pool
-- [ ] Create `ZlibraryClientPool` class
+- [ ] Create `zlibrary_downloader/client_pool.py`
 - [ ] Implement client caching mechanism
-- [ ] Add `get_current_client()` method
-- [ ] Add `rotate_to_next_client()` method
-- [ ] Add `validate_all_clients()` method
-- [ ] Implement error handling for client creation
-- [ ] Write unit tests for client pool
+- [ ] Implement get_current_client()
+- [ ] Implement rotate_to_next_client()
+- [ ] Implement validate_all_clients()
+- [ ] Handle client creation errors
+- [ ] Write unit tests (`tests/test_client_pool.py`)
 
-**Files to create/modify:**
-- `zlibrary_downloader/client_pool.py` (new)
-- Test file: `tests/test_client_pool.py` (new)
+**Deliverables:**
+- client_pool.py with ZlibraryClientPool class
+- test_client_pool.py with comprehensive tests
 
 **Dependencies:** Task 2
 
@@ -69,33 +75,34 @@
 ## Phase 2: CLI Integration
 
 ### Task 5: Update CLI for Multi-Credential Support
-- [ ] Update `load_credentials()` to use CredentialManager
-- [ ] Update `initialize_zlibrary()` to use ClientPool
-- [ ] Add display of credential status on startup
-- [ ] Show available downloads per account
-- [ ] Add new `--list-accounts` command
-- [ ] Update help text and documentation
+- [ ] Update cli.py load_credentials() function
+- [ ] Update cli.py initialize_zlibrary() function
+- [ ] Add credential status display on startup
+- [ ] Display available downloads per account
+- [ ] Update help text documentation
 - [ ] Write integration tests
 
-**Files to create/modify:**
-- `zlibrary_downloader/cli.py` (existing)
-- Test file: `tests/test_cli_integration.py` (update)
+**Deliverables:**
+- Updated cli.py
+- Integration test coverage
+- Updated help messages
 
 **Dependencies:** Task 2, Task 3, Task 4
 
 ---
 
 ### Task 6: Implement Automatic Credential Rotation
-- [ ] Integrate rotation into search operation
-- [ ] Integrate rotation into download operation
+- [ ] Integrate rotation into search_books()
+- [ ] Integrate rotation into download_book()
 - [ ] Update state after each operation
-- [ ] Handle credential exhaustion during operations
-- [ ] Log credential usage for debugging
+- [ ] Handle credential exhaustion
+- [ ] Add logging for credential usage
 - [ ] Write integration tests
 
-**Files to create/modify:**
-- `zlibrary_downloader/cli.py` (existing)
-- `zlibrary_downloader/client_pool.py` (existing)
+**Deliverables:**
+- Updated cli.py with rotation
+- Integration tests
+- Logging implementation
 
 **Dependencies:** Task 4, Task 5
 
@@ -108,12 +115,13 @@
 - [ ] Track remaining downloads per credential
 - [ ] Pre-check before operations
 - [ ] Update limits after successful downloads
-- [ ] Warn users when approaching limits
+- [ ] Warn users approaching limits
 - [ ] Write unit and integration tests
 
-**Files to create/modify:**
-- `zlibrary_downloader/client_pool.py` (existing)
-- `zlibrary_downloader/credential_manager.py` (existing)
+**Deliverables:**
+- Updated credential_manager.py
+- Updated client_pool.py
+- Test coverage for limit tracking
 
 **Dependencies:** Task 2, Task 4, Task 6
 
@@ -121,15 +129,16 @@
 
 ### Task 8: Implement Graceful Fallback
 - [ ] Handle credential failures during operations
-- [ ] Retry with next available credential
-- [ ] Skip exhausted credentials
+- [ ] Implement retry logic with next credential
+- [ ] Skip exhausted credentials automatically
 - [ ] Provide clear error messages
-- [ ] Log fallback attempts
+- [ ] Log all fallback attempts
 - [ ] Write comprehensive error handling tests
 
-**Files to create/modify:**
-- `zlibrary_downloader/client_pool.py` (existing)
-- `zlibrary_downloader/cli.py` (existing)
+**Deliverables:**
+- Updated client_pool.py
+- Updated cli.py
+- Error handling test coverage
 
 **Dependencies:** Task 6, Task 7
 
@@ -138,37 +147,40 @@
 ## Phase 4: Testing & Documentation
 
 ### Task 9: Write Comprehensive Tests
-- [ ] Unit tests for all new modules (80%+ coverage)
+- [-] Unit tests for credential.py (>80% coverage)
+- [ ] Unit tests for credential_manager.py (>80% coverage)
+- [ ] Unit tests for rotation_state.py (>80% coverage)
+- [ ] Unit tests for client_pool.py (>80% coverage)
 - [ ] Integration tests for full workflows
 - [ ] Error handling and edge case tests
-- [ ] Performance tests for credential rotation
-- [ ] Run and fix any failing tests
+- [ ] Performance tests for rotation overhead
+- [ ] Run full test suite
+- [ ] Fix any failing tests
 - [ ] Generate coverage report
 
-**Files to create/modify:**
-- `tests/test_credential.py` (new)
-- `tests/test_credential_manager.py` (new)
-- `tests/test_rotation_state.py` (new)
-- `tests/test_client_pool.py` (new)
-- `tests/test_cli_integration.py` (update)
+**Deliverables:**
+- All test files with >80% coverage
+- Coverage report
+- All tests passing
 
 **Dependencies:** All Phase 1-3 tasks
 
 ---
 
 ### Task 10: Update Documentation
-- [ ] Update README with multi-credential setup instructions
+- [ ] Update README.md with multi-credential setup
 - [ ] Create `.env.example` with multiple credential format
-- [ ] Add troubleshooting guide for credential issues
-- [ ] Document credential rotation behavior
-- [ ] Add examples for different credential formats
-- [ ] Create migration guide from single to multi-credential
+- [ ] Create `docs/multi-credential-guide.md`
+- [ ] Add troubleshooting guide
+- [ ] Add configuration examples
+- [ ] Add migration guide from single to multi-credential
+- [ ] Update API documentation
 
-**Files to create/modify:**
-- `README.md` (existing)
-- `.env.example` (new)
-- `docs/multi-credential-guide.md` (new)
-- `docs/troubleshooting.md` (update)
+**Deliverables:**
+- Updated README.md
+- .env.example
+- User guide
+- Troubleshooting guide
 
 **Dependencies:** Task 5
 
@@ -177,30 +189,37 @@
 ## Phase 5: Validation & Release
 
 ### Task 11: End-to-End Testing
-- [ ] Test with single credential (backward compatibility)
-- [ ] Test with multiple credentials
-- [ ] Test credential rotation across multiple operations
+- [ ] Test backward compatibility (single credential)
+- [ ] Test multiple credentials (2-3 accounts)
+- [ ] Test rotation across 50+ operations
 - [ ] Test fallback when credential exhausted
-- [ ] Test error handling and recovery
-- [ ] Manual testing with real Z-Library accounts (if available)
+- [ ] Test error recovery
+- [ ] Manual testing with real accounts (if available)
+- [ ] Performance testing
 
-**Files involved:**
-- All implementation files
+**Deliverables:**
+- E2E test results
+- Performance metrics
+- Verification of backward compatibility
 
 **Dependencies:** All Phase 1-4 tasks
 
 ---
 
 ### Task 12: Code Review & Cleanup
-- [ ] Code review for quality and standards
+- [ ] Full code review for quality
 - [ ] Remove debug logging
-- [ ] Optimize performance where needed
-- [ ] Ensure consistent style with existing code
-- [ ] Update type hints and docstrings
-- [ ] Final testing and bug fixes
+- [ ] Optimize performance
+- [ ] Ensure consistent style
+- [ ] Update type hints
+- [ ] Update docstrings
+- [ ] Final bug fixes
+- [ ] Prepare for release
 
-**Files involved:**
-- All implementation files
+**Deliverables:**
+- Clean, reviewed code
+- Performance optimizations
+- Documentation completeness
 
 **Dependencies:** Task 11
 
@@ -208,53 +227,84 @@
 
 ## Summary of New Files
 
-### Source Files
-1. `zlibrary_downloader/credential.py` - Credential data model
-2. `zlibrary_downloader/credential_manager.py` - Credential management
-3. `zlibrary_downloader/rotation_state.py` - State persistence
-4. `zlibrary_downloader/client_pool.py` - Client pool management
+### Source Files (4 new)
+1. `zlibrary_downloader/credential.py`
+2. `zlibrary_downloader/credential_manager.py`
+3. `zlibrary_downloader/rotation_state.py`
+4. `zlibrary_downloader/client_pool.py`
 
-### Test Files
-1. `tests/test_credential.py` - Credential model tests
-2. `tests/test_credential_manager.py` - CredentialManager tests
-3. `tests/test_rotation_state.py` - State persistence tests
-4. `tests/test_client_pool.py` - ClientPool tests
+### Modified Files (3)
+1. `zlibrary_downloader/cli.py`
+2. `zlibrary_downloader/__init__.py`
+3. `tests/test_cli_integration.py`
 
-### Documentation Files
-1. `.env.example` - Example environment configuration
-2. `docs/multi-credential-guide.md` - Setup and usage guide
-3. `docs/troubleshooting.md` - Troubleshooting guide
+### Test Files (5 new)
+1. `tests/test_credential.py`
+2. `tests/test_credential_manager.py`
+3. `tests/test_rotation_state.py`
+4. `tests/test_client_pool.py`
+5. `tests/test_multi_credential_integration.py`
 
-### Modified Files
-1. `zlibrary_downloader/cli.py` - CLI updates for multi-credential support
-2. `zlibrary_downloader/__init__.py` - Export new classes
-3. `README.md` - Update main documentation
-4. `tests/test_cli_integration.py` - Update existing tests
+### Documentation Files (4 new)
+1. `.env.example`
+2. `docs/multi-credential-guide.md`
+3. `docs/troubleshooting.md`
+4. Updated `README.md`
 
-## Implementation Priority
+## Effort Estimation
 
-**High Priority (Core Functionality):**
-- Task 1, 2, 3, 4 (Infrastructure)
-- Task 5, 6 (CLI Integration)
+| Phase | Tasks | Estimated Hours | Priority |
+|-------|-------|-----------------|----------|
+| 1: Infrastructure | 1-4 | 8-10 | HIGH |
+| 2: CLI Integration | 5-6 | 4-6 | HIGH |
+| 3: Enhanced Features | 7-8 | 4-6 | MEDIUM |
+| 4: Testing & Docs | 9-10 | 9-12 | HIGH |
+| 5: Validation | 11-12 | 4-6 | HIGH |
+| **TOTAL** | **12** | **29-40** | - |
 
-**Medium Priority (Features):**
-- Task 7, 8 (Enhanced Features)
+## Dependencies
 
-**High Priority (Quality):**
-- Task 9 (Comprehensive Testing)
-- Task 11 (E2E Testing)
+```
+Task 1 (Credential)
+    ↓
+Task 2 (Manager) ← Task 1
+    ↓
+Task 3 (State) ← Task 1
+    ↓
+Task 4 (Pool) ← Task 2
+    ↓
+Task 5 (CLI) ← Task 2, 3, 4
+    ↓
+Task 6 (Rotation) ← Task 4, 5
+    ↓
+Task 7 (Limits) ← Task 2, 4, 6
+    ↓
+Task 8 (Fallback) ← Task 6, 7
+    ↓
+Task 9 (Tests) ← All Phase 1-3
+    ↓
+Task 10 (Docs) ← Task 5
+    ↓
+Task 11 (E2E) ← All Phase 1-4
+    ↓
+Task 12 (Review) ← Task 11
+```
 
-**Medium Priority (Polish):**
-- Task 10 (Documentation)
-- Task 12 (Code Review)
+## Quality Gates
 
-## Estimated Effort
+### Before Phase Completion
+- [ ] All tests passing
+- [ ] >80% code coverage
+- [ ] No linting errors
+- [ ] Type checking passing
+- [ ] Code review approved
+- [ ] Documentation complete
+- [ ] Performance acceptable
 
-- Infrastructure (Tasks 1-4): 8-10 hours
-- CLI Integration (Tasks 5-6): 4-6 hours
-- Enhanced Features (Tasks 7-8): 4-6 hours
-- Testing (Task 9): 6-8 hours
-- Documentation (Task 10): 3-4 hours
-- Validation (Tasks 11-12): 4-6 hours
-
-**Total Estimated Time:** 29-40 hours (depending on complexity and testing depth)
+### Before Release
+- [ ] All phases completed
+- [ ] E2E tests passing
+- [ ] Backward compatibility verified
+- [ ] Security review completed
+- [ ] Documentation reviewed
+- [ ] Release notes prepared

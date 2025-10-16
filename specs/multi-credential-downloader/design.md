@@ -3,122 +3,115 @@
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     CLI Interface                        │
-│              (cli.py - updated)                          │
-└─────────────────────────────────────────────────────────┘
-                         │
-┌─────────────────────────────────────────────────────────┐
-│              Credential Manager                          │
-│          (credential_manager.py - new)                   │
-│  - Load & validate credentials                           │
-│  - Maintain credential state                             │
-│  - Rotation logic                                        │
-└─────────────────────────────────────────────────────────┘
-                         │
-      ┌──────────────────┼──────────────────┐
-      │                  │                  │
-┌─────────────┐  ┌──────────────┐  ┌──────────────┐
-│ Credential  │  │ Credential   │  │ Credential   │
-│ Account 1   │  │ Account 2    │  │ Account N    │
-└─────────────┘  └──────────────┘  └──────────────┘
-      │                  │                  │
-      └──────────────────┼──────────────────┘
-                         │
-┌─────────────────────────────────────────────────────────┐
-│               Z-Library Client Pool                      │
-│          (client_pool.py - new)                          │
-│  - Manage Zlibrary instances                             │
-│  - Provide client for current credential                 │
-└─────────────────────────────────────────────────────────┘
-                         │
-┌─────────────────────────────────────────────────────────┐
-│              Zlibrary API Client                         │
-│              (client.py - existing)                      │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│         CLI Interface (cli.py)               │
+│    Entry point for all operations            │
+└──────────────────────┬───────────────────────┘
+                       │
+┌──────────────────────▼───────────────────────┐
+│     Credential Manager (NEW)                 │
+│  • Load credentials from .env                │
+│  • Validate credentials                      │
+│  • Track rotation state                      │
+│  • Manage credential lifecycle               │
+└──────────────────────┬───────────────────────┘
+                       │
+┌──────────────────────▼───────────────────────┐
+│      Client Pool (NEW)                       │
+│  • Cache Zlibrary client instances           │
+│  • Manage credential rotation                │
+│  • Provide current client                    │
+└──────────────────────┬───────────────────────┘
+                       │
+┌──────────────────────▼───────────────────────┐
+│   Zlibrary API Client (existing)             │
+│  • Search & download operations              │
+│  • API interaction                           │
+└──────────────────────┬───────────────────────┘
+                       │
+                  Z-Library API
 ```
 
 ## Core Components
 
-### 1. Credential Manager (`credential_manager.py`)
+### 1. Credential Data Model
+**File:** `zlibrary_downloader/credential.py`
 
-**Responsibilities:**
-- Load credentials from `.env` file
-- Validate credential format and authenticity
-- Maintain credential state (active, inactive, exhausted)
-- Track rotation index
-- Monitor download limits
-
-**Key Classes:**
 ```python
-class Credential:
-    - identifier: str (email or userid)
-    - email: Optional[str]
-    - password: Optional[str]
-    - remix_userid: Optional[str]
-    - remix_userkey: Optional[str]
-    - status: CredentialStatus (enum)
-    - last_used: datetime
-    - downloads_left: int
+class CredentialStatus(Enum):
+    VALID = "valid"
+    INVALID = "invalid"
+    EXHAUSTED = "exhausted"
 
+class Credential:
+    identifier: str          # Email or user ID (for identification)
+    email: Optional[str]     # For email/password auth
+    password: Optional[str]
+    remix_userid: Optional[str]  # For remix token auth
+    remix_userkey: Optional[str]
+    status: CredentialStatus
+    downloads_left: int
+    last_used: datetime
+    last_validated: datetime
+```
+
+### 2. Credential Manager
+**File:** `zlibrary_downloader/credential_manager.py`
+
+```python
 class CredentialManager:
-    - credentials: List[Credential]
-    - current_index: int
-    - state_file: str
+    credentials: List[Credential]
+    current_index: int
+    state_file: str
 
     Methods:
     - load_credentials() -> List[Credential]
-    - validate_credential(credential) -> bool
-    - get_current_credential() -> Credential
-    - rotate_credential() -> Credential
-    - update_download_limit(credential, limit)
-    - get_available_credentials() -> List[Credential]
-    - save_state()
-    - load_state()
+        # Load from .env, support multiple formats
+    - validate_credential(cred) -> bool
+        # Check if credential works
+    - get_current() -> Credential
+        # Return currently active credential
+    - rotate() -> Credential
+        # Move to next valid credential
+    - update_downloads_left(cred, limit)
+        # Update remaining downloads
+    - get_available() -> List[Credential]
+        # Get non-exhausted credentials
+    - save_state() -> None
+        # Persist state to file
+    - load_state() -> None
+        # Load state from file
 ```
 
-### 2. Client Pool (`client_pool.py`)
+### 3. Client Pool
+**File:** `zlibrary_downloader/client_pool.py`
 
-**Responsibilities:**
-- Maintain a pool of Zlibrary client instances
-- Provide current client based on credential rotation
-- Cache clients to avoid repeated logins
-- Handle client authentication failures
-
-**Key Classes:**
 ```python
 class ZlibraryClientPool:
-    - clients: Dict[str, Zlibrary]
-    - credential_manager: CredentialManager
+    clients: Dict[str, Zlibrary]
+    credential_manager: CredentialManager
 
     Methods:
     - get_current_client() -> Zlibrary
-    - rotate_to_next_client() -> Zlibrary
-    - validate_all_clients() -> Dict[str, bool]
-    - refresh_client(credential) -> Zlibrary
-    - get_client_status() -> Dict[str, ClientStatus]
+        # Get client for current credential
+    - rotate_client() -> Zlibrary
+        # Rotate and get next client
+    - validate_all() -> Dict[str, bool]
+        # Test all credentials
+    - refresh_client(credential)
+        # Create new client for credential
 ```
 
-### 3. Enhanced CLI (`cli.py` - updated)
+## Credential Format in .env
 
-**Changes:**
-- Initialize CredentialManager on startup
-- Display credential status and available downloads
-- Show which account is currently active
-- Provide new commands for credential management
-- Automatically rotate credentials after operations
-
-## Credential Format in `.env`
-
+### Single Credential (Backward Compatible)
 ```env
-# Single credential (backward compatible)
 ZLIBRARY_EMAIL=user@example.com
 ZLIBRARY_PASSWORD=password123
+```
 
-# Multiple credentials (new format)
-# Format: ZLIBRARY_ACCOUNT_<N>_EMAIL and ZLIBRARY_ACCOUNT_<N>_PASSWORD
-# Or: ZLIBRARY_ACCOUNT_<N>_USERID and ZLIBRARY_ACCOUNT_<N>_USERKEY
-
+### Multiple Credentials (New)
+```env
 # Account 1 - Email/Password
 ZLIBRARY_ACCOUNT_1_EMAIL=user1@example.com
 ZLIBRARY_ACCOUNT_1_PASSWORD=password1
@@ -127,17 +120,17 @@ ZLIBRARY_ACCOUNT_1_PASSWORD=password1
 ZLIBRARY_ACCOUNT_2_EMAIL=user2@example.com
 ZLIBRARY_ACCOUNT_2_PASSWORD=password2
 
-# Account 3 - Remix Tokens (recommended)
-ZLIBRARY_ACCOUNT_3_USERID=123456
-ZLIBRARY_ACCOUNT_3_USERKEY=token_key_here
+# Account 3 - Remix Tokens (Recommended)
+ZLIBRARY_ACCOUNT_3_USERID=123456789
+ZLIBRARY_ACCOUNT_3_USERKEY=remix_token_key_here
 
-# Rotation state file location (optional)
+# Optional: State file location
 ZLIBRARY_ROTATION_STATE_FILE=.zlibrary_rotation_state
 ```
 
-## State Management
+## State Persistence
 
-### State File Format (`~/.zlibrary_rotation_state`)
+### State File Format (.zlibrary_rotation_state)
 ```json
 {
     "current_index": 1,
@@ -146,7 +139,7 @@ ZLIBRARY_ROTATION_STATE_FILE=.zlibrary_rotation_state
         "user1@example.com": {
             "last_used": "2024-10-16T12:30:45Z",
             "downloads_left": 8,
-            "status": "active"
+            "status": "valid"
         },
         "user2@example.com": {
             "last_used": "2024-10-16T12:15:30Z",
@@ -157,111 +150,157 @@ ZLIBRARY_ROTATION_STATE_FILE=.zlibrary_rotation_state
 }
 ```
 
-## Workflow Diagrams
+## Workflow: Search and Download
 
-### Search and Download Workflow
 ```
-User Request (Search/Download)
+User initiates search/download
     │
     ├─> Get current credential
+    │   (from CredentialManager)
     │
     ├─> Check credential status
-    │   ├─> Active? Continue
-    │   ├─> Exhausted? Rotate to next
-    │   └─> Error? Skip and rotate
+    │   ├─ Valid? Continue
+    │   ├─ Exhausted? Rotate
+    │   └─ Invalid? Rotate & retry
     │
-    ├─> Get client from pool
+    ├─> Get Zlibrary client
+    │   (from ClientPool cache)
     │
-    ├─> Execute operation (search/download)
-    │   ├─> Success? Update state
-    │   └─> Fail? Log and rotate
+    ├─> Execute operation
+    │   (search or download)
     │
-    └─> Rotate to next credential
-        └─> Save state
+    ├─> On success:
+    │   ├─ Update download count
+    │   └─ Rotate to next credential
+    │
+    ├─> On failure:
+    │   ├─ Log error
+    │   ├─ Retry with next credential
+    │   └─ If all fail, error to user
+    │
+    └─> Save state
+        (persist rotation index)
 ```
 
-### Startup Validation Workflow
+## Workflow: Startup Validation
+
 ```
-Application Start
+Application starts
     │
     ├─> Load credentials from .env
+    │   (support both old and new format)
+    │
+    ├─> Create Credential objects
+    │
+    ├─> Load previous state (if exists)
     │
     ├─> Validate each credential
-    │   ├─> Valid? Mark as active
-    │   └─> Invalid? Mark as error
+    │   ├─ Create test Zlibrary client
+    │   ├─ Call getProfile() to test
+    │   ├─ Set status (valid/invalid)
+    │   └─ Fetch download limits
     │
-    ├─> Load previous rotation state (if exists)
+    ├─> Initialize ClientPool
+    │   (with validated credentials)
     │
-    ├─> Display credential summary to user
+    ├─> Display summary to user
+    │   (account count, available downloads)
     │
     └─> Ready for operations
 ```
 
-## Error Handling Strategy
+## Error Handling
 
 ### Credential Validation Errors
-- Log validation errors with credential identifier (not password)
-- Mark credential as invalid
+- Log validation error with identifier (not password)
+- Mark credential as INVALID
 - Continue with next credential
-- Warn user if no valid credentials found
+- Warn user if no valid credentials
 
 ### Download Limit Exceeded
-- Check remaining downloads before operation
-- Skip to next credential if limit reached
-- Inform user about account exhaustion
+- Check remaining before operation
+- Skip to next if limit reached
+- Inform user about exhaustion
+- Continue with next available
 
 ### API Errors During Operation
-- Retry with current credential (up to 2 attempts)
-- On persistent failure, rotate to next credential
-- Log error details for debugging
+- Retry up to 2 times with current credential
+- On persistent failure, rotate and retry with next
+- If all credentials fail, return error to user
+- Log all attempts for debugging
 
-## Data Flow
+## Data Flow: Credential Rotation
 
-### Operation Sequence
-1. **User initiates search/download**
-2. CredentialManager returns current credential
-3. ClientPool gets or creates Zlibrary client for credential
-4. Operation executes (search or download)
-5. Update credential state (downloads_left)
-6. Rotate to next credential
-7. Save rotation state to file
+```
+Operation Complete
+    │
+    ├─> CredentialManager.rotate()
+    │   ├─ Increment current_index
+    │   ├─ Skip exhausted credentials
+    │   └─ Wrap around if at end
+    │
+    ├─> Update state
+    │   ├─ Save new index
+    │   └─ Update timestamp
+    │
+    └─> ClientPool updates
+        (internal index synced)
+```
+
+## Integration with Existing Code
+
+### Changes to cli.py
+- Update `load_credentials()` to use CredentialManager
+- Update `initialize_zlibrary()` to use ClientPool
+- Add rotation after search_books()
+- Add rotation after download_book()
+- Display credential status on startup
+
+### New Environment Detection
+- Check for `ZLIBRARY_ACCOUNT_1_*` variables first
+- Fall back to `ZLIBRARY_EMAIL` + `ZLIBRARY_PASSWORD` if multi not found
+- Support both formats transparently
 
 ## Backward Compatibility
 
-- Support existing single credential format (ZLIBRARY_EMAIL + ZLIBRARY_PASSWORD)
-- Auto-detect format (single vs. multiple credentials)
-- No breaking changes to existing CLI interface
-- Optional: Migrate to multi-credential format if user chooses
+- Single credential format still works unchanged
+- Auto-detect format (single vs multi)
+- No breaking changes to CLI interface
+- Existing scripts/tools continue to work
+
+## Security Considerations
+
+- Never log credentials (username yes, password no)
+- Sanitize error messages (no credential info)
+- State file permissions: user-readable only (chmod 600)
+- Validate all credential inputs
+- No credential exposure in output
 
 ## Performance Considerations
 
 - Cache Zlibrary clients to avoid repeated logins
-- Lazy-load client credentials on first use
-- Persist rotation state to minimize startup overhead
-- Implement credential health checks periodically
-
-## Security Considerations
-
-- Never log or expose credentials in output
-- Sanitize error messages that might contain credentials
-- Secure state file permissions (user-readable only)
-- Validate and sanitize credential format
-- Use environment variables (via .env) for credential storage
+- Lazy-load credentials on first use
+- Persist state to minimize startup overhead
+- Async validation optional for large credential sets
 
 ## Testing Strategy
 
 ### Unit Tests
-- Credential validation
-- Rotation logic
-- State persistence
+- Credential loading and validation
+- Rotation logic and state transitions
+- State file save/load
 
 ### Integration Tests
 - Multi-credential authentication
-- Search and download with multiple accounts
-- Credential rotation across operations
-- Download limit handling
-
-### E2E Tests
-- Full workflow with multiple accounts
+- Search with rotation
+- Download with rotation
 - Fallback mechanisms
-- Error handling and recovery
+
+### End-to-End Tests
+- Full workflow with 2-3 accounts
+- Credential exhaustion scenarios
+- Error recovery
+
+### Performance Tests
+- Rotation overhead per operation
+- State file I/O performance
