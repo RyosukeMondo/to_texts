@@ -61,7 +61,7 @@
   - _Requirements: 5.1, 5.2_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in file I/O testing and pytest | Task: Create comprehensive unit tests for RotationState in packages/python/zlibrary-downloader/tests/test_rotation_state.py covering requirements 5.1 and 5.2. Test save/load operations, corruption handling, and file permissions. | Restrictions: Use pytest and tempfile, test cross-platform behavior where applicable, ensure test cleanup, aim for >80% coverage | Success: All state persistence functionality tested, edge cases like corruption and missing files covered, tests are isolated and reliable. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 6. Implement Credential Manager Core
+- [x] 6. Implement Credential Manager Core
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/credential_manager.py
   - Create CredentialManager class with credentials list and current_index
   - Implement detect_credential_source() to check for TOML file or .env
