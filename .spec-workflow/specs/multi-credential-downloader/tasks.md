@@ -48,7 +48,7 @@
   - _Requirements: 5.1, 5.2_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in file I/O and state management | Task: Create RotationState class in packages/python/zlibrary-downloader/zlibrary_downloader/rotation_state.py for persistent state storage following requirements 5.1 and 5.2. Implement JSON-based save/load with corruption handling and proper file permissions. | Restrictions: Use only standard library (json, pathlib, os), handle file permissions cross-platform, ensure atomic writes, validate JSON structure | Success: State can be saved and loaded reliably, corrupted files handled gracefully, file permissions set correctly on Unix systems. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 5. Write Rotation State Unit Tests
+- [x] 5. Write Rotation State Unit Tests
   - File: packages/python/zlibrary-downloader/tests/test_rotation_state.py
   - Test save() and load() methods
   - Test handling of missing state files

@@ -64,7 +64,7 @@ class TestRotationStateSave:
         state.save(current_index=1, credentials_data=credentials_data)
 
         # Read and verify the saved JSON
-        with open(state_file, 'r', encoding='utf-8') as f:
+        with open(state_file, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         assert saved_data["current_index"] == 1
@@ -82,7 +82,7 @@ class TestRotationStateSave:
         state.save(current_index=1, credentials_data=[{"identifier": "user2"}])
 
         # Verify the file contains the updated state
-        with open(state_file, 'r', encoding='utf-8') as f:
+        with open(state_file, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         assert saved_data["current_index"] == 1
@@ -91,7 +91,7 @@ class TestRotationStateSave:
 
     def test_save_sets_file_permissions_unix(self, tmp_path):
         """Test that save() sets file permissions to 600 on Unix systems."""
-        if os.name == 'nt':  # Skip on Windows
+        if os.name == "nt":  # Skip on Windows
             pytest.skip("File permission test only applies to Unix systems")
 
         state_file = tmp_path / "state.json"
@@ -111,7 +111,7 @@ class TestRotationStateSave:
 
         state.save(current_index=0, credentials_data=[])
 
-        with open(state_file, 'r', encoding='utf-8') as f:
+        with open(state_file, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         assert saved_data["current_index"] == 0
@@ -135,7 +135,7 @@ class TestRotationStateLoad:
                 {"identifier": "user3"},
             ],
         }
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             json.dump(test_data, f)
 
         # Load and verify
@@ -157,7 +157,7 @@ class TestRotationStateLoad:
         state = RotationState(state_file)
 
         # Write invalid JSON
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             f.write("{ invalid json content }")
 
         with pytest.raises(json.JSONDecodeError):
@@ -169,7 +169,7 @@ class TestRotationStateLoad:
         state = RotationState(state_file)
 
         # Write JSON without current_index
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             json.dump({"credentials": []}, f)
 
         with pytest.raises(ValueError):
@@ -181,7 +181,7 @@ class TestRotationStateLoad:
         state = RotationState(state_file)
 
         # Write JSON without credentials
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             json.dump({"current_index": 0}, f)
 
         with pytest.raises(ValueError):
@@ -203,7 +203,7 @@ class TestRotationStateLoad:
         # Save and load
         state.save(
             current_index=original_data["current_index"],
-            credentials_data=original_data["credentials"]
+            credentials_data=original_data["credentials"],
         )
         loaded = state.load()
 
@@ -340,10 +340,7 @@ class TestRotationStateLoadOrInitialize:
         state = RotationState(state_file)
 
         default_credentials = [{"identifier": "default_user"}]
-        loaded = state.load_or_initialize(
-            default_index=5,
-            default_credentials=default_credentials
-        )
+        loaded = state.load_or_initialize(default_index=5, default_credentials=default_credentials)
 
         assert loaded["current_index"] == 5
         assert loaded["credentials"] == default_credentials
@@ -354,7 +351,7 @@ class TestRotationStateLoadOrInitialize:
         state = RotationState(state_file)
 
         # Write corrupted JSON
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             f.write("{ corrupted json }")
 
         loaded = state.load_or_initialize(default_index=0, default_credentials=[])
@@ -368,7 +365,7 @@ class TestRotationStateLoadOrInitialize:
         state = RotationState(state_file)
 
         # Write valid JSON but invalid structure
-        with open(state_file, 'w', encoding='utf-8') as f:
+        with open(state_file, "w", encoding="utf-8") as f:
             json.dump({"wrong_field": "value"}, f)
 
         loaded = state.load_or_initialize(default_index=0, default_credentials=[])
@@ -400,7 +397,7 @@ class TestRotationStateAtomicWrite:
         state.save(current_index=0, credentials_data=[{"identifier": "user"}])
 
         # Verify temp file doesn't exist after successful save
-        temp_file = state_file.with_suffix('.tmp')
+        temp_file = state_file.with_suffix(".tmp")
         assert not temp_file.exists()
 
     def test_save_replaces_file_atomically(self, tmp_path):
