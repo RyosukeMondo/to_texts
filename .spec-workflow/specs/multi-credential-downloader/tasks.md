@@ -2,7 +2,7 @@
 
 ## Phase 1: Core Infrastructure
 
-- [-] 1. Create Credential Data Model
+- [x] 1. Create Credential Data Model
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/credential.py
   - Define CredentialStatus enum (VALID, INVALID, EXHAUSTED)
   - Define Credential dataclass with all required fields (identifier, email, password, remix_userid, remix_userkey, status, downloads_left, last_used, last_validated)
