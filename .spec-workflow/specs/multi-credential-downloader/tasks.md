@@ -35,7 +35,7 @@
   - _Requirements: 1.1, 1.2_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: QA Engineer with expertise in Python unit testing and pytest | Task: Create comprehensive unit tests for Credential model in packages/python/zlibrary-downloader/tests/test_credential.py covering requirements 1.1 and 1.2. Test all enum values, dataclass instantiation, availability logic, and serialization/deserialization. | Restrictions: Use pytest framework, test both success and failure scenarios, ensure test isolation, aim for >80% coverage | Success: All Credential functionality is tested, edge cases covered, tests run independently and pass consistently. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 4. Implement Rotation State Persistence
+- [x] 4. Implement Rotation State Persistence
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/rotation_state.py
   - Define RotationState class with state_file path
   - Implement save() method to write JSON state file
