@@ -134,7 +134,7 @@
 
 ## Phase 2: CLI Integration
 
-- [ ] 11. Update CLI for Multi-Credential Support
+- [x] 11. Update CLI for Multi-Credential Support
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/cli.py
   - Refactor load_credentials() to use CredentialManager
   - Refactor initialize_zlibrary() to use ClientPool

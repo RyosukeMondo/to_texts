@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
 Z-Library Book Downloader
-Search and download books from Z-Library using credentials from .env file
+Search and download books from Z-Library using credentials from configuration file
+Supports both TOML (multiple credentials) and .env (single credential) formats
 """
 
 import os
 import sys
 import argparse
-from typing import Dict, Optional, Any, List
+from typing import Optional, Any, List, Dict
 from .client import Zlibrary
-from dotenv import load_dotenv
+from .credential_manager import CredentialManager
+from .client_pool import ZlibraryClientPool
 
 # Try to import TUI module (optional)
 try:
@@ -20,43 +22,103 @@ except ImportError:
     TUI_AVAILABLE = False
 
 
-def load_credentials() -> Dict[str, Optional[str]]:
-    """Load credentials from .env file"""
-    load_dotenv()
+def load_credentials() -> tuple[CredentialManager, ZlibraryClientPool]:
+    """
+    Load credentials and initialize credential manager and client pool.
 
-    # Try to get remix credentials first (recommended)
-    remix_userid = os.getenv("ZLIBRARY_REMIX_USERID")
-    remix_userkey = os.getenv("ZLIBRARY_REMIX_USERKEY")
+    Supports both TOML (zlibrary_credentials.toml) and .env formats.
+    TOML format allows multiple credentials with automatic rotation.
+    .env format provides backward compatibility with single credential.
 
-    # Fall back to email/password if remix not available
-    email = os.getenv("ZLIBRARY_EMAIL")
-    password = os.getenv("ZLIBRARY_PASSWORD")
+    Returns:
+        tuple[CredentialManager, ZlibraryClientPool]: Initialized manager and pool
 
-    return {
-        "email": email,
-        "password": password,
-        "remix_userid": remix_userid,
-        "remix_userkey": remix_userkey,
-    }
-
-
-def initialize_zlibrary(credentials: Dict[str, Optional[str]]) -> Zlibrary:
-    """Initialize Z-Library client with credentials"""
-    if credentials["remix_userid"] and credentials["remix_userkey"]:
-        print("Logging in with remix credentials...")
-        return Zlibrary(
-            remix_userid=credentials["remix_userid"], remix_userkey=credentials["remix_userkey"]
-        )
-    elif credentials["email"] and credentials["password"]:
-        print("Logging in with email/password...")
-        return Zlibrary(email=credentials["email"], password=credentials["password"])
-    else:
-        print("Error: No valid credentials found in .env file")
-        print(
-            "Please set either ZLIBRARY_EMAIL/ZLIBRARY_PASSWORD or "
-            "ZLIBRARY_REMIX_USERID/ZLIBRARY_REMIX_USERKEY"
-        )
+    Raises:
+        SystemExit: If no credentials found or loading fails
+    """
+    try:
+        credential_manager = CredentialManager()
+        credential_manager.load_credentials()
+        client_pool = ZlibraryClientPool(credential_manager)
+        return credential_manager, client_pool
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print("\nPlease create one of the following:")
+        print("  1. zlibrary_credentials.toml (recommended for multiple accounts)")
+        print("  2. .env (single account, backward compatible)")
         sys.exit(1)
+    except ValueError as e:
+        print(f"Error loading credentials: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error loading credentials: {e}")
+        sys.exit(1)
+
+
+def initialize_zlibrary(client_pool: ZlibraryClientPool) -> Zlibrary:
+    """
+    Initialize Z-Library client from client pool.
+
+    Args:
+        client_pool: ZlibraryClientPool instance
+
+    Returns:
+        Zlibrary: Authenticated Z-Library client
+
+    Raises:
+        SystemExit: If client initialization fails
+    """
+    client = client_pool.get_current_client()
+
+    if client is None:
+        print("Error: Failed to initialize Z-Library client")
+        print("Please check your credentials and try again")
+        sys.exit(1)
+
+    return client
+
+
+def display_credential_status(credential_manager: CredentialManager) -> None:
+    """
+    Display summary of loaded credentials and their status.
+
+    Shows:
+    - Total number of credentials loaded
+    - Currently active credential
+    - Available vs exhausted credentials
+    - Download limits (if available)
+
+    Args:
+        credential_manager: CredentialManager instance
+    """
+    print("\n" + "=" * 60)
+    print("Credential Status")
+    print("=" * 60)
+
+    total_creds = len(credential_manager.credentials)
+    available_creds = len(credential_manager.get_available())
+    current_cred = credential_manager.get_current()
+
+    print(f"Total credentials: {total_creds}")
+    print(f"Available credentials: {available_creds}")
+
+    if current_cred:
+        print(f"Current credential: {current_cred.identifier}")
+
+        # Display authentication method
+        if current_cred.remix_userid and current_cred.remix_userkey:
+            auth_method = "Remix tokens"
+        elif current_cred.email and current_cred.password:
+            auth_method = "Email/password"
+        else:
+            auth_method = "Unknown"
+        print(f"Authentication: {auth_method}")
+
+        # Display download limits if available
+        if current_cred.downloads_left is not None:
+            print(f"Downloads remaining: {current_cred.downloads_left}")
+
+    print("=" * 60)
 
 
 def search_books(z_client: Zlibrary, query: str, **kwargs: Any) -> Optional[Dict[str, Any]]:
@@ -298,12 +360,9 @@ def add_search_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--page", type=int, help="Page number for pagination")
 
 
-def create_argument_parser() -> argparse.ArgumentParser:
-    """Create and configure the argument parser"""
-    parser = argparse.ArgumentParser(
-        description="Z-Library Book Downloader",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+def get_help_epilog() -> str:
+    """Get the epilog text for argument parser help."""
+    return """
 Examples:
   TUI mode (interactive with rich UI):
     ./run.sh --tui
@@ -323,7 +382,25 @@ Examples:
 Available formats: pdf, epub, mobi, azw3, fb2, txt, djvu, etc.
 Available languages: english, spanish, french, german, russian, etc.
 Available order: popular, year, title
-        """,
+
+Credential Configuration:
+  This tool supports two credential formats:
+  1. zlibrary_credentials.toml (recommended) - Multiple accounts with automatic rotation
+  2. .env - Single account for backward compatibility
+
+  For TOML format, create zlibrary_credentials.toml in the current directory.
+  See zlibrary_credentials.toml.example for configuration template.
+    """
+
+
+def create_argument_parser() -> argparse.ArgumentParser:
+    """Create and configure the argument parser"""
+    parser = argparse.ArgumentParser(
+        description=(
+            "Z-Library Book Downloader - " "Supports multiple credentials with automatic rotation"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=get_help_epilog(),
     )
 
     add_mode_arguments(parser)
@@ -358,10 +435,15 @@ def main() -> None:
     print("Z-Library Book Downloader")
     print("=" * 60)
 
-    # Load credentials and initialize client
-    credentials = load_credentials()
-    z_client = initialize_zlibrary(credentials)
-    print("Login successful!")
+    # Load credentials and initialize client pool
+    credential_manager, client_pool = load_credentials()
+
+    # Display credential status
+    display_credential_status(credential_manager)
+
+    # Initialize client
+    z_client = initialize_zlibrary(client_pool)
+    print("\nLogin successful!")
 
     # Run the appropriate mode
     select_and_run_mode(z_client, args)
