@@ -151,6 +151,24 @@ def _build_search_params(query: str, **kwargs: Any) -> Dict[str, Any]:
     return search_params
 
 
+def _check_download_limit_warning(credential_manager: CredentialManager) -> None:
+    """Check and warn if current credential is approaching download limits."""
+    current_cred = credential_manager.get_current()
+    if not current_cred or current_cred.downloads_left is None:
+        return
+
+    # Warn if downloads left is 5 or less (but not 0)
+    if 0 < current_cred.downloads_left <= 5:
+        print(
+            f"\n⚠️  Warning: Only {current_cred.downloads_left} download(s) remaining "
+            f"for credential '{current_cred.identifier}'"
+        )
+        logger.warning(
+            f"Credential '{current_cred.identifier}' approaching limit: "
+            f"{current_cred.downloads_left} downloads remaining"
+        )
+
+
 def _rotate_after_operation(client_pool: ZlibraryClientPool, operation: str) -> None:
     """Rotate to next credential after successful operation."""
     current_cred = client_pool.credential_manager.get_current()
@@ -164,6 +182,29 @@ def _rotate_after_operation(client_pool: ZlibraryClientPool, operation: str) -> 
         logger.warning("All credentials exhausted - cannot rotate")
 
 
+def _handle_operation_failure(
+    client_pool: Optional[ZlibraryClientPool],
+    attempt: int,
+    max_retries: int,
+    cred_id: str,
+    operation: str,
+) -> bool:
+    """Handle operation failure and determine if retry should occur."""
+    if not client_pool or attempt >= max_retries - 1:
+        return False
+
+    available_creds = client_pool.credential_manager.get_available()
+    if len(available_creds) > 1:
+        print(f"⚠️  {operation} failed with '{cred_id}'. Trying next credential...")
+        logger.info(f"Rotating to next credential after {operation.lower()} failure")
+        client_pool.credential_manager.rotate()
+        return True
+
+    print("❌ Error: All credentials exhausted or unavailable")
+    logger.error("No more credentials available for retry")
+    return False
+
+
 def search_books(
     z_client: Zlibrary, query: str, client_pool: Optional[ZlibraryClientPool] = None, **kwargs: Any
 ) -> Optional[Dict[str, Any]]:
@@ -171,7 +212,8 @@ def search_books(
     Search for books on Z-Library with optional filters.
 
     Automatically rotates to next credential after successful search when
-    using multi-credential setup.
+    using multi-credential setup. Implements retry logic with next credential
+    on failures.
 
     Args:
         z_client: Z-Library client to use for search
@@ -185,19 +227,47 @@ def search_books(
     print(f"\nSearching for: {query}")
 
     search_params = _build_search_params(query, **kwargs)
+    max_retries = 3 if client_pool else 1
+    last_error = None
 
-    try:
-        results = z_client.search(**search_params)
+    for attempt in range(max_retries):
+        try:
+            # Use current client from pool
+            current_client = (
+                z_client
+                if attempt == 0
+                else (client_pool.get_current_client() if client_pool else z_client)
+            )
 
-        # Rotate to next credential after successful search
-        if results and client_pool:
-            _rotate_after_operation(client_pool, "Search")
+            if not current_client:
+                logger.error("No available client for search")
+                break
 
-        return results
-    except Exception as e:
-        print(f"Error searching: {e}")
-        logger.error(f"Search failed: {e}")
-        return None
+            results = current_client.search(**search_params)
+
+            # Rotate to next credential after successful search
+            if results and client_pool:
+                _rotate_after_operation(client_pool, "Search")
+
+            return results
+
+        except Exception as e:
+            last_error = e
+            current_cred = client_pool.credential_manager.get_current() if client_pool else None
+            cred_id = current_cred.identifier if current_cred else "unknown"
+
+            logger.error(f"Search attempt {attempt + 1} failed with credential '{cred_id}': {e}")
+
+            # Try next credential if available
+            if not _handle_operation_failure(client_pool, attempt, max_retries, cred_id, "Search"):
+                break
+
+    # All retries exhausted
+    if last_error:
+        print(f"❌ Error searching: {last_error}")
+        logger.error(f"Search failed after {max_retries} attempts: {last_error}")
+
+    return None
 
 
 def display_results(results: Optional[Dict[str, Any]]) -> None:
@@ -231,8 +301,7 @@ def _update_download_limits(client_pool: ZlibraryClientPool) -> None:
     success, error = client_pool.credential_manager.update_downloads_left(current_cred)
     if success and current_cred.downloads_left is not None:
         logger.info(
-            f"Downloads remaining for {current_cred.identifier}: "
-            f"{current_cred.downloads_left}"
+            f"Downloads remaining for {current_cred.identifier}: " f"{current_cred.downloads_left}"
         )
         print(f"Downloads remaining: {current_cred.downloads_left}")
     elif error:
@@ -249,6 +318,47 @@ def _rotate_after_download(client_pool: ZlibraryClientPool) -> None:
         print("\nWarning: All credentials exhausted. No more downloads available.")
 
 
+def _check_and_skip_exhausted_credential(
+    client_pool: ZlibraryClientPool,
+) -> bool:
+    """Check if current credential is exhausted and skip if needed."""
+    current_cred = client_pool.credential_manager.get_current()
+    if (
+        current_cred
+        and current_cred.downloads_left is not None
+        and current_cred.downloads_left == 0
+    ):
+        logger.warning(
+            f"Credential '{current_cred.identifier}' has 0 downloads left, rotating to next"
+        )
+        available_creds = client_pool.credential_manager.get_available()
+        if not available_creds:
+            print("❌ Error: All credentials have reached their download limits")
+            logger.error("All credentials exhausted - cannot download")
+            return False
+        client_pool.credential_manager.rotate()
+    return True
+
+
+def _perform_download(client: Zlibrary, book: Dict[str, Any], download_dir: str) -> Optional[str]:
+    """Perform the actual download and file save operation."""
+    print(f"Downloading: {book.get('title', 'Unknown')}")
+    download_result = client.downloadBook(book)
+
+    if download_result is None:
+        raise RuntimeError("Download failed (no content returned)")
+
+    filename, filecontent = download_result
+
+    # Save the file
+    filepath = os.path.join(download_dir, filename)
+    with open(filepath, "wb") as bookfile:
+        bookfile.write(filecontent)
+
+    print(f"✓ Successfully downloaded to: {filepath}")
+    return filepath
+
+
 def download_book(
     z_client: Zlibrary,
     book: Dict[str, Any],
@@ -259,7 +369,8 @@ def download_book(
     Download a book from Z-Library.
 
     Automatically rotates to next credential and updates download limits
-    after successful download when using multi-credential setup.
+    after successful download when using multi-credential setup. Implements
+    retry logic with next credential on failures.
 
     Args:
         z_client: Z-Library client to use for download
@@ -273,34 +384,59 @@ def download_book(
     # Create downloads directory if it doesn't exist
     os.makedirs(download_dir, exist_ok=True)
 
-    try:
-        print(f"Downloading: {book.get('title', 'Unknown')}")
-        download_result = z_client.downloadBook(book)
+    # Check for download limit warnings before attempting
+    if client_pool:
+        _check_download_limit_warning(client_pool.credential_manager)
 
-        if download_result is None:
-            print("Error: Download failed (no content returned)")
-            logger.error("Download failed - no content returned")
-            return None
+    max_retries = 3 if client_pool else 1
+    last_error = None
 
-        filename, filecontent = download_result
+    for attempt in range(max_retries):
+        try:
+            # Check if current credential has exhausted downloads
+            if client_pool and not _check_and_skip_exhausted_credential(client_pool):
+                return None
 
-        # Save the file
-        filepath = os.path.join(download_dir, filename)
-        with open(filepath, "wb") as bookfile:
-            bookfile.write(filecontent)
+            # Use current client from pool
+            current_client = (
+                z_client
+                if attempt == 0
+                else (client_pool.get_current_client() if client_pool else z_client)
+            )
 
-        print(f"Successfully downloaded to: {filepath}")
+            if not current_client:
+                logger.error("No available client for download")
+                print("❌ Error: No available credentials for download")
+                return None
 
-        # Update download limits and rotate after successful download
-        if client_pool:
-            _update_download_limits(client_pool)
-            _rotate_after_download(client_pool)
+            filepath = _perform_download(current_client, book, download_dir)
 
-        return filepath
-    except Exception as e:
-        print(f"Error downloading book: {e}")
-        logger.error(f"Download failed: {e}")
-        return None
+            # Update download limits and rotate after successful download
+            if client_pool:
+                _update_download_limits(client_pool)
+                _rotate_after_download(client_pool)
+
+            return filepath
+
+        except Exception as e:
+            last_error = e
+            current_cred = client_pool.credential_manager.get_current() if client_pool else None
+            cred_id = current_cred.identifier if current_cred else "unknown"
+
+            logger.error(f"Download attempt {attempt + 1} failed with credential '{cred_id}': {e}")
+
+            # Try next credential if available
+            if not _handle_operation_failure(
+                client_pool, attempt, max_retries, cred_id, "Download"
+            ):
+                break
+
+    # All retries exhausted
+    if last_error:
+        print(f"❌ Error downloading book: {last_error}")
+        logger.error(f"Download failed after {max_retries} attempts: {last_error}")
+
+    return None
 
 
 def prompt_for_download(

@@ -158,7 +158,7 @@
   - _Requirements: 2.2, 2.3, 3.2, 3.3, 4.2, 4.3_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Backend Python Developer with expertise in workflow automation | Task: Extend CLI operations in packages/python/zlibrary-downloader/zlibrary_downloader/cli.py to integrate automatic rotation following requirements 2.2, 2.3, 3.2, 3.3, 4.2, and 4.3. Add rotation after search/download operations, update download limits, implement proper logging. | Restrictions: Only rotate after successful operations, handle errors without losing state, log rotation events (not credentials), maintain operation transparency to user | Success: Rotation occurs automatically after operations, download limits update correctly, exhausted credentials skipped, rotation events logged appropriately. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 13. Implement Graceful Fallback and Error Handling
+- [x] 13. Implement Graceful Fallback and Error Handling
   - File: packages/python/zlibrary-downloader/zlibrary_downloader/cli.py (extend)
   - Add retry logic for failed operations with next credential
   - Implement automatic skip for exhausted credentials

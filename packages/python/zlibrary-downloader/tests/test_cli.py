@@ -192,9 +192,7 @@ class TestDisplayCredentialStatus:
         assert "Email/password" in captured.out
         assert "Downloads remaining: 5" in captured.out
 
-    def test_display_credential_status_with_remix_auth(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_display_credential_status_with_remix_auth(self, capsys: pytest.CaptureFixture) -> None:
         """Test displaying status with remix authentication."""
         mock_cm = Mock()
         credential = Credential(
@@ -343,10 +341,7 @@ class TestAutomaticRotation:
         mock_pool.credential_manager = mock_cm
 
         cred1 = Credential(
-            identifier="cred1",
-            email="test1@example.com",
-            password="pass1",
-            downloads_left=5
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=5
         )
         cred2 = Credential(identifier="cred2", email="test2@example.com", password="pass2")
 
@@ -427,3 +422,176 @@ class TestAutomaticRotation:
         mock_client.downloadBook.assert_called_once_with(book)
         assert result is not None
         assert (tmp_path / "test.pdf").exists()
+
+
+class TestErrorHandlingAndRetry:
+    """Test suite for error handling and retry logic."""
+
+    def test_search_books_retry_with_next_credential(self, capsys: pytest.CaptureFixture) -> None:
+        """Test search_books retries with next credential on failure."""
+        # First client fails, second succeeds
+        mock_client1 = Mock()
+        mock_client1.search.side_effect = Exception("Network error")
+
+        mock_client2 = Mock()
+        mock_client2.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+        mock_pool.get_current_client.return_value = mock_client2
+
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        cred2 = Credential(identifier="cred2", email="test2@example.com", password="pass2")
+
+        mock_cm.get_current.side_effect = [cred1, cred1, cred2]
+        mock_cm.get_available.return_value = [cred1, cred2]
+        mock_cm.rotate.return_value = cred2
+
+        results = cli.search_books(mock_client1, "test query", mock_pool)
+
+        # Should succeed with second credential
+        assert results is not None
+        assert "books" in results
+
+        # Verify rotation was called after failure
+        mock_cm.rotate.assert_called()
+
+        captured = capsys.readouterr()
+        assert "failed" in captured.out.lower() or "trying next credential" in captured.out.lower()
+
+    def test_search_books_all_credentials_fail(self, capsys: pytest.CaptureFixture) -> None:
+        """Test search_books handles all credentials failing."""
+        mock_client = Mock()
+        mock_client.search.side_effect = Exception("Network error")
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+        mock_pool.get_current_client.return_value = mock_client
+
+        cred1 = Credential(identifier="cred1", email="test1@example.com", password="pass1")
+        mock_cm.get_current.return_value = cred1
+        mock_cm.get_available.return_value = [cred1]  # Only one credential
+
+        results = cli.search_books(mock_client, "test query", mock_pool)
+
+        # Should return None after all retries
+        assert results is None
+
+        captured = capsys.readouterr()
+        assert "error" in captured.out.lower()
+
+    def test_download_book_retry_with_next_credential(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Test download_book retries with next credential on failure."""
+        # First client fails, second succeeds
+        mock_client1 = Mock()
+        mock_client1.downloadBook.side_effect = Exception("Download failed")
+
+        mock_client2 = Mock()
+        mock_client2.downloadBook.return_value = ("test.pdf", b"fake pdf content")
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+        mock_pool.get_current_client.return_value = mock_client2
+
+        cred1 = Credential(
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=5
+        )
+        cred2 = Credential(
+            identifier="cred2", email="test2@example.com", password="pass2", downloads_left=10
+        )
+
+        # Need enough side effects for all calls in the retry loop
+        mock_cm.get_current.side_effect = [cred1, cred1, cred2, cred2, cred2, cred2]
+        mock_cm.get_available.return_value = [cred1, cred2]
+        mock_cm.rotate.return_value = cred2
+        mock_cm.update_downloads_left.return_value = (True, None)
+
+        book = {"title": "Test Book"}
+        result = cli.download_book(mock_client1, book, mock_pool, str(tmp_path))
+
+        # Should succeed with second credential
+        assert result is not None
+        assert (tmp_path / "test.pdf").exists()
+
+        # Verify rotation was called after failure
+        mock_cm.rotate.assert_called()
+
+        captured = capsys.readouterr()
+        assert "failed" in captured.out.lower() or "trying next credential" in captured.out.lower()
+
+    def test_download_book_all_credentials_exhausted(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Test download_book handles all credentials exhausted scenario."""
+        mock_client = Mock()
+
+        mock_pool = Mock()
+        mock_cm = Mock()
+        mock_pool.credential_manager = mock_cm
+        mock_pool.get_current_client.return_value = None
+
+        cred1 = Credential(
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=0
+        )
+
+        mock_cm.get_current.return_value = cred1
+        mock_cm.get_available.return_value = []  # All exhausted
+
+        book = {"title": "Test Book"}
+        result = cli.download_book(mock_client, book, mock_pool, str(tmp_path))
+
+        # Should return None
+        assert result is None
+
+        captured = capsys.readouterr()
+        assert "exhausted" in captured.out.lower() or "download limits" in captured.out.lower()
+
+    def test_download_limit_warning(self, capsys: pytest.CaptureFixture) -> None:
+        """Test warning is displayed when credential is approaching download limit."""
+        mock_cm = Mock()
+
+        # Test with 5 downloads left (should warn)
+        cred_low = Credential(
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=5
+        )
+        mock_cm.get_current.return_value = cred_low
+
+        cli._check_download_limit_warning(mock_cm)
+
+        captured = capsys.readouterr()
+        assert "warning" in captured.out.lower()
+        assert "5" in captured.out
+
+    def test_download_limit_no_warning_for_high_limits(self, capsys: pytest.CaptureFixture) -> None:
+        """Test no warning is displayed when credential has plenty of downloads."""
+        mock_cm = Mock()
+
+        # Test with 10 downloads left (should not warn)
+        cred_high = Credential(
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=10
+        )
+        mock_cm.get_current.return_value = cred_high
+
+        cli._check_download_limit_warning(mock_cm)
+
+        captured = capsys.readouterr()
+        assert "warning" not in captured.out.lower()
+
+    def test_download_limit_no_warning_for_none(self, capsys: pytest.CaptureFixture) -> None:
+        """Test no warning when downloads_left is None."""
+        mock_cm = Mock()
+
+        cred_none = Credential(
+            identifier="cred1", email="test1@example.com", password="pass1", downloads_left=None
+        )
+        mock_cm.get_current.return_value = cred_none
+
+        cli._check_download_limit_warning(mock_cm)
+
+        captured = capsys.readouterr()
+        assert "warning" not in captured.out.lower()
