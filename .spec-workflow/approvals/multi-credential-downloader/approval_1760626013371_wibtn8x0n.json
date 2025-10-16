@@ -1,0 +1,27 @@
+{
+  "id": "approval_1760626013371_wibtn8x0n",
+  "title": "Design Document - Multi-Credential Downloader",
+  "filePath": ".spec-workflow/specs/multi-credential-downloader/design.md",
+  "type": "document",
+  "status": "needs-revision",
+  "createdAt": "2025-10-16T14:46:53.371Z",
+  "category": "spec",
+  "categoryName": "multi-credential-downloader",
+  "response": "Feedback Summary (1 comments):\n\nSpecific Text Comments:\n1. \"# アカウント 1\nZLIBRARY_ACCOUNT_1_EMAIL=user1@example.c...\": 1,2,3 are not enough.  maybe better to have structured data format like toml, yaml, json, pick sutable for our python script\n",
+  "annotations": "{\n  \"decision\": \"needs-revision\",\n  \"comments\": [\n    {\n      \"type\": \"selection\",\n      \"comment\": \"1,2,3 are not enough.  maybe better to have structured data format like toml, yaml, json, pick sutable for our python script\",\n      \"timestamp\": \"2025-10-16T14:49:17.890Z\",\n      \"selectedText\": \"# アカウント 1\\nZLIBRARY_ACCOUNT_1_EMAIL=user1@example.com\\nZLIBRARY_ACCOUNT_1_PASSWORD=パスワード1\\n\\n# アカウント2\\nZLIBRARY_ACCOUNT_2_EMAIL=user2@example.com\\nZLIBRARY_ACCOUNT_2_PASSWORD=パスワード2\\n\\n# アカウント3 - リミックストークン\\nZLIBRARY_ACCOUNT_3_ユーザーID=123456789\\nZLIBRARY_ACCOUNT_3_USERKEY=リミックストークンキー\",\n      \"highlightColor\": {\n        \"bg\": \"rgba(255, 235, 59, 0.3)\",\n        \"border\": \"#FFEB3B\",\n        \"name\": \"#ffeb3b\"\n      },\n      \"id\": \"comment_1760626157890_shpmlwxhi\"\n    }\n  ],\n  \"summary\": \"Feedback Summary (1 comments):\\n\\nSpecific Text Comments:\\n1. \\\"# アカウント 1\\nZLIBRARY_ACCOUNT_1_EMAIL=user1@example.c...\\\": 1,2,3 are not enough.  maybe better to have structured data format like toml, yaml, json, pick sutable for our python script\\n\",\n  \"timestamp\": \"2025-10-16T14:49:24.221Z\"\n}",
+  "respondedAt": "2025-10-16T14:49:23.951Z",
+  "comments": [
+    {
+      "type": "selection",
+      "comment": "1,2,3 are not enough.  maybe better to have structured data format like toml, yaml, json, pick sutable for our python script",
+      "timestamp": "2025-10-16T14:49:17.890Z",
+      "selectedText": "# アカウント 1\nZLIBRARY_ACCOUNT_1_EMAIL=user1@example.com\nZLIBRARY_ACCOUNT_1_PASSWORD=パスワード1\n\n# アカウント2\nZLIBRARY_ACCOUNT_2_EMAIL=user2@example.com\nZLIBRARY_ACCOUNT_2_PASSWORD=パスワード2\n\n# アカウント3 - リミックストークン\nZLIBRARY_ACCOUNT_3_ユーザーID=123456789\nZLIBRARY_ACCOUNT_3_USERKEY=リミックストークンキー",
+      "highlightColor": {
+        "bg": "rgba(255, 235, 59, 0.3)",
+        "border": "#FFEB3B",
+        "name": "#ffeb3b"
+      },
+      "id": "comment_1760626157890_shpmlwxhi"
+    }
+  ]
+}

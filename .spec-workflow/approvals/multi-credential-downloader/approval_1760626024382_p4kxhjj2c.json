@@ -1,0 +1,21 @@
+{
+  "id": "approval_1760626024382_p4kxhjj2c",
+  "title": "Tasks Document - Multi-Credential Downloader",
+  "filePath": ".spec-workflow/specs/multi-credential-downloader/tasks.md",
+  "type": "document",
+  "status": "needs-revision",
+  "createdAt": "2025-10-16T14:47:04.382Z",
+  "category": "spec",
+  "categoryName": "multi-credential-downloader",
+  "response": "Feedback Summary (1 comments):\n\nGeneral Comments:\n1. revise according to design.md change\n\n",
+  "annotations": "{\n  \"decision\": \"needs-revision\",\n  \"comments\": [\n    {\n      \"type\": \"general\",\n      \"comment\": \"revise according to design.md change\",\n      \"timestamp\": \"2025-10-16T14:54:50.560Z\",\n      \"id\": \"comment_1760626490560_qzr3lca11\"\n    }\n  ],\n  \"summary\": \"Feedback Summary (1 comments):\\n\\nGeneral Comments:\\n1. revise according to design.md change\\n\\n\",\n  \"timestamp\": \"2025-10-16T14:54:52.127Z\"\n}",
+  "respondedAt": "2025-10-16T14:54:51.838Z",
+  "comments": [
+    {
+      "type": "general",
+      "comment": "revise according to design.md change",
+      "timestamp": "2025-10-16T14:54:50.560Z",
+      "id": "comment_1760626490560_qzr3lca11"
+    }
+  ]
+}

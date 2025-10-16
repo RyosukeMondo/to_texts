@@ -1,0 +1,12 @@
+{
+  "id": "approval_1760626275514_ac7th4yzv",
+  "title": "Design Document - Multi-Credential Downloader (Revised with TOML)",
+  "filePath": ".spec-workflow/specs/multi-credential-downloader/design.md",
+  "type": "document",
+  "status": "approved",
+  "createdAt": "2025-10-16T14:51:15.515Z",
+  "category": "spec",
+  "categoryName": "multi-credential-downloader",
+  "response": "ダッシュボードから承認",
+  "respondedAt": "2025-10-16T14:54:36.058Z"
+}

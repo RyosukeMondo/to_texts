@@ -1,0 +1,12 @@
+{
+  "id": "approval_1760626678385_gigqlefzm",
+  "title": "Tasks Document - Multi-Credential Downloader (Revised with TOML)",
+  "filePath": ".spec-workflow/specs/multi-credential-downloader/tasks.md",
+  "type": "document",
+  "status": "approved",
+  "createdAt": "2025-10-16T14:57:58.385Z",
+  "category": "spec",
+  "categoryName": "multi-credential-downloader",
+  "response": "ダッシュボードから承認",
+  "respondedAt": "2025-10-16T15:00:49.602Z"
+}
