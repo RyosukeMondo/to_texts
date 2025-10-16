@@ -2,7 +2,6 @@
 Unit tests for the Credential data model.
 """
 
-import pytest
 from datetime import datetime
 from zlibrary_downloader.credential import Credential, CredentialStatus
 
@@ -39,19 +38,23 @@ class TestCredentialDataclass:
         assert cred.enabled is True
 
         # Test optional auth fields are None
-        assert all([
-            cred.email is None,
-            cred.password is None,
-            cred.remix_userid is None,
-            cred.remix_userkey is None,
-        ])
+        assert all(
+            [
+                cred.email is None,
+                cred.password is None,
+                cred.remix_userid is None,
+                cred.remix_userkey is None,
+            ]
+        )
 
         # Test tracking fields are None
-        assert all([
-            cred.downloads_left is None,
-            cred.last_used is None,
-            cred.last_validated is None,
-        ])
+        assert all(
+            [
+                cred.downloads_left is None,
+                cred.last_used is None,
+                cred.last_validated is None,
+            ]
+        )
 
     def test_credential_with_email_password(self):
         """Test creating a credential with email and password."""
@@ -214,8 +217,15 @@ class TestCredentialSerialization:
         assert data["enabled"] is True
 
         # Test None fields
-        none_fields = ["email", "password", "remix_userid", "remix_userkey",
-                       "downloads_left", "last_used", "last_validated"]
+        none_fields = [
+            "email",
+            "password",
+            "remix_userid",
+            "remix_userkey",
+            "downloads_left",
+            "last_used",
+            "last_validated",
+        ]
         assert all(data[field] is None for field in none_fields)
 
     def test_to_dict_complete(self):
@@ -317,8 +327,16 @@ class TestCredentialSerialization:
 
         # Verify all fields match
         fields_to_check = [
-            "identifier", "email", "password", "remix_userid", "remix_userkey",
-            "status", "downloads_left", "last_used", "last_validated", "enabled"
+            "identifier",
+            "email",
+            "password",
+            "remix_userid",
+            "remix_userkey",
+            "status",
+            "downloads_left",
+            "last_used",
+            "last_validated",
+            "enabled",
         ]
         for field in fields_to_check:
             assert getattr(restored, field) == getattr(original, field)

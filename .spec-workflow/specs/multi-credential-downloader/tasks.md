@@ -23,7 +23,7 @@
   - _Requirements: 5.1_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: DevOps Engineer with expertise in Python packaging | Task: Add tomli dependency to project dependencies in packages/python/zlibrary-downloader/ following requirement 5.1. Add conditional dependency for Python versions <3.11 since Python 3.11+ has built-in tomllib. Update setup.py, requirements.txt, or pyproject.toml as appropriate for the project structure. | Restrictions: Use conditional dependency syntax (tomli;python_version<"3.11"), do not break existing dependencies, follow project's dependency management pattern | Success: tomli dependency added correctly with version constraint, conditional for Python <3.11, project can be installed successfully on both Python 3.10 and 3.11+. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 3. Write Credential Model Unit Tests
+- [x] 3. Write Credential Model Unit Tests
   - File: packages/python/zlibrary-downloader/tests/test_credential.py
   - Test CredentialStatus enum values
   - Test Credential dataclass instantiation with various combinations
