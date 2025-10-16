@@ -89,7 +89,7 @@
   - _Requirements: 1.3, 1.4, 4.1, 4.2_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer with expertise in API integration and error handling | Task: Extend CredentialManager in packages/python/zlibrary-downloader/zlibrary_downloader/credential_manager.py with validation methods following requirements 1.3, 1.4, 4.1, and 4.2. Implement credential validation using Zlibrary client's getProfile() method, download limit tracking, and robust error handling with retries. | Restrictions: Reuse existing Zlibrary client, never log passwords, implement retry logic (max 2 attempts), handle network timeouts gracefully | Success: Credentials validate correctly against Z-Library API, download limits fetched and tracked, network errors handled with retries, no sensitive data logged. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 8. Write Credential Manager Unit Tests
+- [x] 8. Write Credential Manager Unit Tests
   - File: packages/python/zlibrary-downloader/tests/test_credential_manager.py
   - Test credential loading from TOML file with multiple accounts
   - Test credential loading from .env (single credential, backward compatibility)

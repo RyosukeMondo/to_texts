@@ -3,9 +3,8 @@ Unit tests for the CredentialManager class.
 """
 
 import os
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 import pytest
 
 from zlibrary_downloader.credential import Credential, CredentialStatus
