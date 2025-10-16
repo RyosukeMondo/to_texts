@@ -170,7 +170,7 @@
   - _Requirements: 3.4, 4.3, 4.4, 5.4_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer specializing in error handling and resilience patterns | Task: Implement comprehensive error handling in packages/python/zlibrary-downloader/zlibrary_downloader/cli.py following requirements 3.4, 4.3, 4.4, and 5.4. Add retry logic, exhaustion handling, clear error messages, and warning system. | Restrictions: Retry with next credential on failures, do not expose credentials in errors, provide actionable error messages, limit retry attempts to avoid infinite loops | Success: Operations retry with next credential on failure, exhausted credentials skipped automatically, clear error messages displayed, all-exhausted scenario handled gracefully. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 14. Write CLI Integration Tests
+- [x] 14. Write CLI Integration Tests
   - File: packages/python/zlibrary-downloader/tests/test_cli_integration.py
   - Test CLI initialization with multi-credential setup
   - Test search operation with rotation
