@@ -119,7 +119,7 @@
   - _Requirements: 2.1, 3.1, 3.2, 3.3_
   - _Prompt: Implement the task for spec multi-credential-downloader. First run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Developer specializing in resource management and caching patterns | Task: Create ZlibraryClientPool class in packages/python/zlibrary-downloader/zlibrary_downloader/client_pool.py following requirements 2.1, 3.1, 3.2, and 3.3. Implement client caching by credential identifier, rotation integration with CredentialManager, and validation methods. | Restrictions: Cache clients to avoid repeated authentication, handle credential rotation transparently, properly handle client creation failures, maintain separation of concerns | Success: Clients are properly cached and reused, rotation triggers client switching, validation tests all credentials, client creation errors handled gracefully. Mark task as [-] when starting and [x] when complete in .spec-workflow/specs/multi-credential-downloader/tasks.md_
 
-- [ ] 10. Write Client Pool Unit Tests
+- [x] 10. Write Client Pool Unit Tests
   - File: packages/python/zlibrary-downloader/tests/test_client_pool.py
   - Test client caching (same credential returns cached client)
   - Test get_current_client() and rotate_client()
