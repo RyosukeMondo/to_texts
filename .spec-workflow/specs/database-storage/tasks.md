@@ -87,7 +87,7 @@
 
 ## Phase 3: Service Layer (Est: 3-4 days)
 
-- [ ] 10. Implement BookService
+- [x] 10. Implement BookService
   - Files: `zlibrary_downloader/book_service.py` (~180 lines)
   - Orchestrate book operations across BookRepository and AuthorRepository
   - Provide high-level methods: get_book_details, browse_books, save_book, unsave_book
