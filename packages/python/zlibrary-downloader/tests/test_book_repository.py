@@ -6,7 +6,6 @@ parameterized queries, and SQL injection prevention using in-memory SQLite.
 """
 
 import sqlite3
-from datetime import datetime
 from pathlib import Path
 
 import pytest

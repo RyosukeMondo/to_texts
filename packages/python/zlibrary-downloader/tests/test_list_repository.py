@@ -99,6 +99,7 @@ class TestGetListById:
     def test_get_existing_list_by_id(self, list_repo: ReadingListRepository) -> None:
         """Test getting an existing list by ID."""
         created = list_repo.create_list("To Read")
+        assert created.id is not None
         result = list_repo.get_list_by_id(created.id)
 
         assert result is not None
@@ -141,6 +142,7 @@ class TestAddBook:
     ) -> None:
         """Test adding a book to a list."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         list_repo.add_book(reading_list.id, sample_books[0].id)
 
         books = list_repo.get_books(reading_list.id)
@@ -152,6 +154,7 @@ class TestAddBook:
     ) -> None:
         """Test adding multiple books maintains position order."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
 
         # Add books in specific order
         for book in sample_books:
@@ -169,6 +172,7 @@ class TestAddBook:
     ) -> None:
         """Test adding same book twice is silently ignored."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         list_repo.add_book(reading_list.id, sample_books[0].id)
         list_repo.add_book(reading_list.id, sample_books[0].id)
 
@@ -184,6 +188,7 @@ class TestRemoveBook:
     ) -> None:
         """Test removing a book that exists in the list."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         list_repo.add_book(reading_list.id, sample_books[0].id)
         list_repo.add_book(reading_list.id, sample_books[1].id)
 
@@ -197,6 +202,7 @@ class TestRemoveBook:
     def test_remove_nonexistent_book(self, list_repo: ReadingListRepository) -> None:
         """Test removing a book not in the list returns False."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         result = list_repo.remove_book(reading_list.id, "nonexistent")
         assert result is False
 
@@ -207,6 +213,7 @@ class TestGetBooks:
     def test_get_books_empty_list(self, list_repo: ReadingListRepository) -> None:
         """Test getting books from empty list."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         books = list_repo.get_books(reading_list.id)
         assert len(books) == 0
 
@@ -215,6 +222,7 @@ class TestGetBooks:
     ) -> None:
         """Test that books are returned in position order."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
 
         for book in sample_books:
             list_repo.add_book(reading_list.id, book.id)
@@ -233,6 +241,7 @@ class TestDeleteList:
     def test_delete_existing_list(self, list_repo: ReadingListRepository) -> None:
         """Test deleting an existing list."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         result = list_repo.delete_list(reading_list.id)
         assert result is True
 
@@ -250,6 +259,7 @@ class TestDeleteList:
     ) -> None:
         """Test that deleting a list removes book associations."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         list_repo.add_book(reading_list.id, sample_books[0].id)
 
         # Delete the list
@@ -265,6 +275,7 @@ class TestRowConversion:
     def test_row_to_list_preserves_all_fields(self, list_repo: ReadingListRepository) -> None:
         """Test that row conversion preserves all list fields."""
         created = list_repo.create_list("To Read", "Books I want to read")
+        assert created.id is not None
         retrieved = list_repo.get_list_by_id(created.id)
 
         assert retrieved is not None
@@ -278,6 +289,7 @@ class TestRowConversion:
     ) -> None:
         """Test that book row conversion preserves fields."""
         reading_list = list_repo.create_list("To Read")
+        assert reading_list.id is not None
         list_repo.add_book(reading_list.id, sample_books[0].id)
 
         books = list_repo.get_books(reading_list.id)

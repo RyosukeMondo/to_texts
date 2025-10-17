@@ -13,7 +13,7 @@ import pytest
 from zlibrary_downloader.author_repository import AuthorRepository
 from zlibrary_downloader.book_repository import BookRepository
 from zlibrary_downloader.db_manager import DatabaseManager
-from zlibrary_downloader.models import Author, Book
+from zlibrary_downloader.models import Book
 
 
 @pytest.fixture
@@ -99,6 +99,7 @@ class TestLinkBookAuthor:
     ) -> None:
         """Test linking a book to an author."""
         author = author_repo.get_or_create("Test Author")
+        assert author.id is not None
         author_repo.link_book_author(sample_book.id, author.id)
 
         authors = author_repo.get_authors_for_book(sample_book.id)
@@ -114,6 +115,7 @@ class TestLinkBookAuthor:
         author1 = author_repo.get_or_create("First Author")
         author2 = author_repo.get_or_create("Second Author")
         author3 = author_repo.get_or_create("Third Author")
+        assert author1.id is not None and author2.id is not None and author3.id is not None
 
         author_repo.link_book_author(sample_book.id, author2.id, order=1)
         author_repo.link_book_author(sample_book.id, author3.id, order=2)
@@ -132,6 +134,7 @@ class TestLinkBookAuthor:
     ) -> None:
         """Test that duplicate book-author link raises IntegrityError."""
         author = author_repo.get_or_create("Duplicate Test")
+        assert author.id is not None
         author_repo.link_book_author(sample_book.id, author.id)
 
         with pytest.raises(sqlite3.IntegrityError):
@@ -158,6 +161,7 @@ class TestGetAuthorsForBook:
         """Test that authors are returned in correct order."""
         author1 = author_repo.get_or_create("Alpha")
         author2 = author_repo.get_or_create("Beta")
+        assert author1.id is not None and author2.id is not None
 
         # Link in reverse alphabetical order
         author_repo.link_book_author(sample_book.id, author2.id, order=0)
@@ -188,6 +192,7 @@ class TestGetBooksForAuthor:
         book1 = book_repo.create(Book(id="1", hash="h1", title="Book 1"))
         book2 = book_repo.create(Book(id="2", hash="h2", title="Book 2"))
         author = author_repo.get_or_create("Prolific Author")
+        assert author.id is not None
 
         author_repo.link_book_author(book1.id, author.id)
         author_repo.link_book_author(book2.id, author.id)
@@ -200,6 +205,7 @@ class TestGetBooksForAuthor:
     def test_get_books_empty_list(self, author_repo: AuthorRepository) -> None:
         """Test getting books for author with no books."""
         author = author_repo.get_or_create("No Books Author")
+        assert author.id is not None
         book_ids = author_repo.get_books_for_author(author.id)
         assert len(book_ids) == 0
 
@@ -215,6 +221,7 @@ class TestForeignKeyConstraints:
         """Test that deleting book removes book-author relationships."""
         book = book_repo.create(Book(id="1", hash="h1", title="Book"))
         author = author_repo.get_or_create("Author")
+        assert author.id is not None
         author_repo.link_book_author(book.id, author.id)
 
         # Delete book
