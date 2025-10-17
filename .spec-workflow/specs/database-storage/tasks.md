@@ -58,7 +58,7 @@
   - _Requirements: Req 1 (author extraction and linking)_
   - _Prompt: Implement the task for spec database-storage, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Backend Developer with expertise in database relationships and normalization | Task: Implement AuthorRepository class with DatabaseManager dependency, providing get_or_create(name) to find existing author or create new one (handling race conditions with INSERT OR IGNORE), link_book_author(book_id, author_id, order) to create book_authors relationship, get_authors_for_book(book_id) returning List[Author], and get_books_for_author(author_id) for reverse lookup, all using parameterized queries and returning Author dataclass instances | Restrictions: Must use parameterized queries exclusively, handle duplicate author names gracefully with INSERT OR IGNORE, maintain author_order in book_authors for multi-author books, file must be ≤100 lines, each function ≤30 lines | _Leverage: Use zlibrary_downloader/db_manager.py for connection, zlibrary_downloader/models.py Author dataclass | _Requirements: Req 1 (author extraction and linking) | Success: get_or_create handles duplicates correctly, book-author relationships created properly with ordering, parameterized queries used, ≤100 lines, ≤30 lines per function, passes mypy strict | Instructions: Edit [ ] to [-], implement AuthorRepository, test with duplicate names, change [-] to [x]_
 
-- [ ] 7. Implement ReadingListRepository
+- [x] 7. Implement ReadingListRepository
   - Files: `zlibrary_downloader/list_repository.py` (~200 lines)
   - Implement CRUD for reading lists and list membership
   - Support ordered book lists with position tracking
