@@ -6,7 +6,7 @@ using parameterized queries for security and the Book dataclass for type safety.
 
 import sqlite3
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Any
 
 from .db_manager import DatabaseManager
 from .models import Book
@@ -288,9 +288,7 @@ class BookRepository:
         Returns:
             int: Number of matching books
         """
-        where_clauses, params = self._build_count_where(
-            language, year_from, year_to, extension
-        )
+        where_clauses, params = self._build_count_where(language, year_from, year_to, extension)
 
         sql = "SELECT COUNT(*) FROM books"
         if where_clauses:

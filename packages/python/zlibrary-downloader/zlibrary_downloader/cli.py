@@ -211,7 +211,7 @@ def search_books(
     client_pool: Optional[ZlibraryClientPool] = None,
     save_to_db: bool = False,
     search_service: Any = None,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> Optional[Dict[str, Any]]:
     """
     Search for books on Z-Library with optional filters.
@@ -440,19 +440,15 @@ def download_book(
             filepath = _perform_download(current_client, book, download_dir)
 
             # Record download in database if service available
-            if download_service:
+            if download_service and filepath:
                 try:
-                    credential_id = (
-                        client_pool.credential_manager.get_current().id
-                        if client_pool and client_pool.credential_manager.get_current()
-                        else None
-                    )
+                    # Note: credential_id is None as Credential doesn't have a database id
                     download_service.record_download(
                         book_id=str(book.get("id", "")),
-                        credential_id=credential_id,
                         filename=os.path.basename(filepath),
-                        path=filepath,
-                        size=os.path.getsize(filepath),
+                        file_path=filepath,
+                        credential_id=None,
+                        file_size=os.path.getsize(filepath),
                     )
                 except Exception as db_error:
                     logger.warning(f"Failed to record download in database: {db_error}")
@@ -497,7 +493,9 @@ def prompt_for_download(
         try:
             book_idx = int(download_choice) - 1
             if 0 <= book_idx < len(books):
-                download_book(z_client, books[book_idx], client_pool, download_service=download_service)
+                download_book(
+                    z_client, books[book_idx], client_pool, download_service=download_service
+                )
             else:
                 print("Invalid book number")
         except ValueError:
@@ -639,8 +637,9 @@ def command_line_mode(
             print("Continuing search without database storage...")
             save_to_db = False
 
-    results = search_books(z_client, args.title, client_pool, save_to_db, search_service,
-                          **search_kwargs)
+    results = search_books(
+        z_client, args.title, client_pool, save_to_db, search_service, **search_kwargs
+    )
     handle_search_results(z_client, results, args.download, client_pool)
 
 
@@ -731,7 +730,7 @@ Credential Configuration:
     """
 
 
-def _add_db_browse_parser(db_subparsers: argparse._SubParsersAction) -> None:
+def _add_db_browse_parser(db_subparsers: Any) -> None:
     """Add db browse subcommand parser"""
     browse_parser = db_subparsers.add_parser("browse", help="Browse books in database")
     browse_parser.add_argument("--query", type=str, help="Search query for books")
@@ -744,18 +743,17 @@ def _add_db_browse_parser(db_subparsers: argparse._SubParsersAction) -> None:
     browse_parser.set_defaults(func="db_browse")
 
 
-def _add_db_save_parser(db_subparsers: argparse._SubParsersAction) -> None:
+def _add_db_save_parser(db_subparsers: Any) -> None:
     """Add db save subcommand parser"""
     save_parser = db_subparsers.add_parser("save", help="Save a book to collection")
     save_parser.add_argument("book_id", type=int, help="Book ID to save")
     save_parser.add_argument("--notes", type=str, help="Notes about the book")
     save_parser.add_argument("--tags", type=str, help="Comma-separated tags")
-    save_parser.add_argument("--priority", type=int, choices=[1, 2, 3, 4, 5],
-                           help="Priority (1-5)")
+    save_parser.add_argument("--priority", type=int, choices=[1, 2, 3, 4, 5], help="Priority (1-5)")
     save_parser.set_defaults(func="db_save")
 
 
-def _add_simple_db_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+def _add_simple_db_parsers(db_subparsers: Any) -> None:
     """Add simple db subcommand parsers (init, show, unsave, saved)"""
     init_parser = db_subparsers.add_parser("init", help="Initialize the book database")
     init_parser.set_defaults(func="db_init")
@@ -772,29 +770,21 @@ def _add_simple_db_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     saved_parser.set_defaults(func="db_saved")
 
 
-def _add_list_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+def _add_list_parsers(db_subparsers: Any) -> None:
     """Add reading list subcommand parsers"""
     # list-create
-    create_parser = db_subparsers.add_parser(
-        "list-create", help="Create a new reading list"
-    )
+    create_parser = db_subparsers.add_parser("list-create", help="Create a new reading list")
     create_parser.add_argument("name", type=str, help="Name for the reading list")
-    create_parser.add_argument(
-        "--description", type=str, help="Optional description"
-    )
+    create_parser.add_argument("--description", type=str, help="Optional description")
     create_parser.set_defaults(func="db_list_create")
 
     # list-show
-    show_parser = db_subparsers.add_parser(
-        "list-show", help="Show books in a reading list"
-    )
+    show_parser = db_subparsers.add_parser("list-show", help="Show books in a reading list")
     show_parser.add_argument("name", type=str, help="Name of the reading list")
     show_parser.set_defaults(func="db_list_show")
 
     # list-add
-    add_parser = db_subparsers.add_parser(
-        "list-add", help="Add a book to a reading list"
-    )
+    add_parser = db_subparsers.add_parser("list-add", help="Add a book to a reading list")
     add_parser.add_argument("name", type=str, help="Name of the reading list")
     add_parser.add_argument("book_id", type=int, help="Book ID to add")
     add_parser.set_defaults(func="db_list_add")
@@ -808,9 +798,7 @@ def _add_list_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     remove_parser.set_defaults(func="db_list_remove")
 
     # list-delete
-    delete_parser = db_subparsers.add_parser(
-        "list-delete", help="Delete a reading list"
-    )
+    delete_parser = db_subparsers.add_parser("list-delete", help="Delete a reading list")
     delete_parser.add_argument("name", type=str, help="Name of the reading list")
     delete_parser.set_defaults(func="db_list_delete")
 
@@ -819,12 +807,10 @@ def _add_list_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     lists_parser.set_defaults(func="db_lists")
 
 
-def _add_utility_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+def _add_utility_parsers(db_subparsers: Any) -> None:
     """Add database utility subcommand parsers"""
     # downloads
-    downloads_parser = db_subparsers.add_parser(
-        "downloads", help="Show download history"
-    )
+    downloads_parser = db_subparsers.add_parser("downloads", help="Show download history")
     downloads_parser.add_argument("--recent", type=int, help="Days to look back")
     downloads_parser.add_argument("--credential", type=str, help="Filter by credential ID")
     downloads_parser.add_argument("--limit", type=int, default=50, help="Limit results")
@@ -837,8 +823,7 @@ def _add_utility_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     # export
     export_parser = db_subparsers.add_parser("export", help="Export books to file")
     export_parser.add_argument(
-        "--format", type=str, choices=["json", "csv"], default="json",
-        help="Export format"
+        "--format", type=str, choices=["json", "csv"], default="json", help="Export format"
     )
     export_parser.add_argument("--output", type=str, help="Output filename")
     export_parser.set_defaults(func="db_export")
@@ -853,12 +838,12 @@ def _add_utility_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     vacuum_parser.set_defaults(func="db_vacuum")
 
 
-def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
+def add_db_arguments(subparsers: Any) -> None:
     """Add database subcommand arguments to parser"""
     db_parser = subparsers.add_parser(
         "db",
         help="Database operations for managing book library",
-        description="Manage local book database"
+        description="Manage local book database",
     )
     db_subparsers = db_parser.add_subparsers(dest="db_command", help="Database commands")
     _add_simple_db_parsers(db_subparsers)
@@ -913,24 +898,25 @@ def _get_db_command_handlers() -> Dict[str, Any]:
     """Get mapping of db command names to handler functions"""
     try:
         from . import db_commands
+
         return {
-            'init': db_commands.db_init_command,
-            'browse': db_commands.db_browse_command,
-            'show': db_commands.db_show_command,
-            'save': db_commands.db_save_command,
-            'unsave': db_commands.db_unsave_command,
-            'saved': db_commands.db_saved_command,
-            'list-create': db_commands.db_list_create_command,
-            'list-show': db_commands.db_list_show_command,
-            'list-add': db_commands.db_list_add_command,
-            'list-remove': db_commands.db_list_remove_command,
-            'list-delete': db_commands.db_list_delete_command,
-            'lists': db_commands.db_lists_command,
-            'downloads': db_commands.db_downloads_command,
-            'stats': db_commands.db_stats_command,
-            'export': db_commands.db_export_command,
-            'import': db_commands.db_import_command,
-            'vacuum': db_commands.db_vacuum_command,
+            "init": db_commands.db_init_command,
+            "browse": db_commands.db_browse_command,
+            "show": db_commands.db_show_command,
+            "save": db_commands.db_save_command,
+            "unsave": db_commands.db_unsave_command,
+            "saved": db_commands.db_saved_command,
+            "list-create": db_commands.db_list_create_command,
+            "list-show": db_commands.db_list_show_command,
+            "list-add": db_commands.db_list_add_command,
+            "list-remove": db_commands.db_list_remove_command,
+            "list-delete": db_commands.db_list_delete_command,
+            "lists": db_commands.db_lists_command,
+            "downloads": db_commands.db_downloads_command,
+            "stats": db_commands.db_stats_command,
+            "export": db_commands.db_export_command,
+            "import": db_commands.db_import_command,
+            "vacuum": db_commands.db_vacuum_command,
         }
     except ImportError:
         print("Error: Database commands module not available yet")
@@ -940,7 +926,7 @@ def _get_db_command_handlers() -> Dict[str, Any]:
 
 def handle_db_commands(args: argparse.Namespace) -> None:
     """Route db commands to appropriate handlers"""
-    if not hasattr(args, 'db_command') or args.db_command is None:
+    if not hasattr(args, "db_command") or args.db_command is None:
         print("Error: No database command specified")
         print("Use 'db --help' to see available commands")
         sys.exit(1)
@@ -960,7 +946,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # Check if this is a db command
-    if hasattr(args, 'command') and args.command == 'db':
+    if hasattr(args, "command") and args.command == "db":
         handle_db_commands(args)
         return
 

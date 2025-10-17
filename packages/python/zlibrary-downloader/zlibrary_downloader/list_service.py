@@ -25,9 +25,7 @@ class ListService:
         book_repo: BookRepository instance
     """
 
-    def __init__(
-        self, list_repo: ReadingListRepository, book_repo: BookRepository
-    ) -> None:
+    def __init__(self, list_repo: ReadingListRepository, book_repo: BookRepository) -> None:
         """
         Initialize ListService.
 
@@ -83,8 +81,7 @@ class ListService:
         reading_list = self.list_repo.get_list_by_name(list_name)
         if not reading_list:
             raise ValueError(
-                f"List '{list_name}' not found. "
-                "Use 'db lists' to see available lists."
+                f"List '{list_name}' not found. " "Use 'db lists' to see available lists."
             )
 
         # Verify book exists
@@ -116,8 +113,7 @@ class ListService:
         reading_list = self.list_repo.get_list_by_name(list_name)
         if not reading_list:
             raise ValueError(
-                f"List '{list_name}' not found. "
-                "Use 'db lists' to see available lists."
+                f"List '{list_name}' not found. " "Use 'db lists' to see available lists."
             )
 
         if reading_list.id is None:
@@ -169,8 +165,7 @@ class ListService:
         reading_list = self.list_repo.get_list_by_name(list_name)
         if not reading_list:
             raise ValueError(
-                f"List '{list_name}' not found. "
-                "Use 'db lists' to see available lists."
+                f"List '{list_name}' not found. " "Use 'db lists' to see available lists."
             )
 
         if reading_list.id is None:

@@ -4,8 +4,7 @@ This module provides the AuthorRepository class for managing authors and
 book-author relationships, using parameterized queries for security.
 """
 
-import sqlite3
-from typing import List, Optional
+from typing import List
 
 from .db_manager import DatabaseManager
 from .models import Author
@@ -63,9 +62,7 @@ class AuthorRepository:
 
         return Author(id=row["id"], name=row["name"])
 
-    def link_book_author(
-        self, book_id: str, author_id: int, order: int = 0
-    ) -> None:
+    def link_book_author(self, book_id: str, author_id: int, order: int = 0) -> None:
         """
         Create book-author relationship.
 

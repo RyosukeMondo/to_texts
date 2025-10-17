@@ -17,7 +17,7 @@ from .list_service import ListService
 from .list_repository import ReadingListRepository
 from .download_service import DownloadService
 from .download_repository import DownloadRepository
-from .models import Book, Author, ReadingList
+from .models import Book, Author
 
 
 def db_init_command(args: argparse.Namespace) -> None:
@@ -381,9 +381,9 @@ def db_list_delete_command(args: argparse.Namespace) -> None:
     """
     try:
         # Prompt for confirmation
-        confirmation = input(
-            f"Are you sure you want to delete list '{args.name}'? (y/N): "
-        ).strip().lower()
+        confirmation = (
+            input(f"Are you sure you want to delete list '{args.name}'? (y/N): ").strip().lower()
+        )
 
         if confirmation != "y":
             print("Cancelled")
@@ -429,9 +429,7 @@ def db_lists_command(args: argparse.Namespace) -> None:
         print(f"\nReading Lists ({len(lists)}):\n")
 
         for idx, reading_list in enumerate(lists, 1):
-            books = (
-                list_repo.get_books(reading_list.id) if reading_list.id else []
-            )
+            books = list_repo.get_books(reading_list.id) if reading_list.id else []
             book_count = len(books)
 
             print(f"{idx}. {reading_list.name}")
@@ -476,8 +474,8 @@ def db_downloads_command(args: argparse.Namespace) -> None:
         for idx, download in enumerate(downloads, 1):
             print(f"{idx}. {download.filename}")
             print(f"   Book ID: {download.book_id}")
-            print(f"   Path: {download.path}")
-            print(f"   Size: {download.size} bytes")
+            print(f"   Path: {download.file_path}")
+            print(f"   Size: {download.file_size} bytes")
             print(f"   Status: {download.status}")
             print(f"   Downloaded: {download.downloaded_at}")
             if credential_id or download.credential_id:
@@ -577,18 +575,27 @@ def db_export_command(args: argparse.Namespace) -> None:
         elif output_format == "csv":
             # Export to CSV
             import csv
+
             with open(output_file, "w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["ID", "Title", "Authors", "Year", "Publisher",
-                               "Language", "Extension", "Size"])
+                writer.writerow(
+                    ["ID", "Title", "Authors", "Year", "Publisher", "Language", "Extension", "Size"]
+                )
                 for book in books:
                     authors = author_repo.get_authors_for_book(book.id)
                     author_names = "; ".join(a.name for a in authors)
-                    writer.writerow([
-                        book.id, book.title, author_names, book.year or "",
-                        book.publisher or "", book.language or "",
-                        book.extension or "", book.size or ""
-                    ])
+                    writer.writerow(
+                        [
+                            book.id,
+                            book.title,
+                            author_names,
+                            book.year or "",
+                            book.publisher or "",
+                            book.language or "",
+                            book.extension or "",
+                            book.size or "",
+                        ]
+                    )
         else:
             print(f"❌ Unsupported format: {output_format}")
             return
