@@ -1,0 +1,22 @@
+{
+  "filePath": ".spec-workflow/specs/database-storage/design.md",
+  "currentVersion": 2,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-10-17T14:52:32.450Z",
+      "trigger": "initial",
+      "approvalId": "approval_1760712752443_drkgsa4zh",
+      "approvalTitle": "Design: Database Storage Feature"
+    },
+    {
+      "version": 2,
+      "filename": "snapshot-002.json",
+      "timestamp": "2025-10-17T14:57:34.152Z",
+      "trigger": "approved",
+      "approvalId": "approval_1760712752443_drkgsa4zh",
+      "approvalTitle": "Design: Database Storage Feature"
+    }
+  ]
+}
