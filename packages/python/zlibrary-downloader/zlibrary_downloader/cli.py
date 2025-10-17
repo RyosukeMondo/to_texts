@@ -206,19 +206,26 @@ def _handle_operation_failure(
 
 
 def search_books(
-    z_client: Zlibrary, query: str, client_pool: Optional[ZlibraryClientPool] = None, **kwargs: Any
+    z_client: Zlibrary,
+    query: str,
+    client_pool: Optional[ZlibraryClientPool] = None,
+    save_to_db: bool = False,
+    search_service: Any = None,
+    **kwargs: Any
 ) -> Optional[Dict[str, Any]]:
     """
     Search for books on Z-Library with optional filters.
 
     Automatically rotates to next credential after successful search when
     using multi-credential setup. Implements retry logic with next credential
-    on failures.
+    on failures. Optionally stores results in database.
 
     Args:
         z_client: Z-Library client to use for search
         query: Search query string
         client_pool: Optional client pool for credential rotation
+        save_to_db: Whether to save results to database (default: False)
+        search_service: SearchService instance for database storage
         **kwargs: Additional search parameters (format, year_from, year_to, etc.)
 
     Returns:
@@ -243,7 +250,25 @@ def search_books(
                 logger.error("No available client for search")
                 break
 
-            results = current_client.search(**search_params)
+            # If save_to_db is enabled, use SearchService
+            if save_to_db and search_service:
+                try:
+                    # SearchService returns List[Book], convert back to API format
+                    stored_books = search_service.search_and_store(
+                        current_client, query, **search_params
+                    )
+                    # Still perform normal search to get full API response
+                    results = current_client.search(**search_params)
+                    if results:
+                        print(f"✓ Stored {len(stored_books)} books in database")
+                except Exception as db_error:
+                    # Database errors shouldn't break search
+                    logger.warning(f"Database storage failed: {db_error}")
+                    print(f"⚠️  Warning: Could not save to database: {db_error}")
+                    # Continue with normal search
+                    results = current_client.search(**search_params)
+            else:
+                results = current_client.search(**search_params)
 
             # Rotate to next credential after successful search
             if results and client_pool:
@@ -567,7 +592,33 @@ def command_line_mode(
 ) -> None:
     """Command line mode for direct search and optional download"""
     search_kwargs = build_search_kwargs(args)
-    results = search_books(z_client, args.title, client_pool, **search_kwargs)
+    save_to_db = getattr(args, "save_db", False)
+    search_service = None
+
+    # Initialize database services if --save-db flag is present
+    if save_to_db:
+        try:
+            from .db_manager import DatabaseManager
+            from .book_repository import BookRepository
+            from .author_repository import AuthorRepository
+            from .search_history_repository import SearchHistoryRepository
+            from .search_service import SearchService
+
+            db_manager = DatabaseManager()
+            db_manager.initialize_schema()
+
+            book_repo = BookRepository(db_manager)
+            author_repo = AuthorRepository(db_manager)
+            search_repo = SearchHistoryRepository(db_manager)
+            search_service = SearchService(book_repo, author_repo, search_repo)
+        except Exception as e:
+            logger.warning(f"Failed to initialize database: {e}")
+            print(f"⚠️  Warning: Database initialization failed: {e}")
+            print("Continuing search without database storage...")
+            save_to_db = False
+
+    results = search_books(z_client, args.title, client_pool, save_to_db, search_service,
+                          **search_kwargs)
     handle_search_results(z_client, results, args.download, client_pool)
 
 
@@ -596,6 +647,7 @@ def add_search_arguments(parser: argparse.ArgumentParser) -> None:
     """Add search and filter arguments to parser"""
     parser.add_argument("--title", type=str, help="Book title to search for")
     parser.add_argument("--download", action="store_true", help="Download the first result")
+    parser.add_argument("--save-db", action="store_true", help="Save search results to database")
     parser.add_argument(
         "--format", type=str, help="File format (pdf, epub, mobi, azw3, fb2, txt, djvu, etc.)"
     )
@@ -624,11 +676,17 @@ Examples:
   Search and download:
     ./run.sh --title "Python Programming" --download
 
+  Search with database storage:
+    ./run.sh --title "Machine Learning" --save-db
+
   Search with filters:
     ./run.sh --title "Machine Learning" --format pdf --year-from 2020 --limit 10
 
   Advanced search:
     ./run.sh --title "Data Science" --format epub --language english --order year --download
+
+  Search and save to database:
+    ./run.sh --title "Python Programming" --save-db --format pdf --language english
 
   Database commands:
     ./run.sh db init                           # Initialize database

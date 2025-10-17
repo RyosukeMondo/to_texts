@@ -595,3 +595,57 @@ class TestErrorHandlingAndRetry:
 
         captured = capsys.readouterr()
         assert "warning" not in captured.out.lower()
+
+
+class TestSearchWithDatabase:
+    """Test suite for search with database storage functionality."""
+
+    def test_search_books_without_save_db(self) -> None:
+        """Test search_books without database storage (backward compatibility)."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        result = cli.search_books(mock_client, "test query", save_to_db=False)
+
+        mock_client.search.assert_called_once()
+        assert result is not None
+        assert "books" in result
+
+    def test_search_books_with_save_db(self) -> None:
+        """Test search_books with database storage enabled."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        mock_search_service = Mock()
+        mock_search_service.search_and_store.return_value = [Mock()]
+
+        result = cli.search_books(
+            mock_client, "test query", save_to_db=True, search_service=mock_search_service
+        )
+
+        # Both search_and_store and regular search should be called
+        mock_search_service.search_and_store.assert_called_once()
+        mock_client.search.assert_called_once()
+        assert result is not None
+
+    def test_search_books_db_error_does_not_break_search(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Test that database errors don't prevent search from working."""
+        mock_client = Mock()
+        mock_client.search.return_value = {"books": [{"title": "Test Book"}]}
+
+        mock_search_service = Mock()
+        mock_search_service.search_and_store.side_effect = Exception("DB Error")
+
+        result = cli.search_books(
+            mock_client, "test query", save_to_db=True, search_service=mock_search_service
+        )
+
+        # Search should still succeed
+        assert result is not None
+        assert "books" in result
+
+        # Warning should be displayed
+        captured = capsys.readouterr()
+        assert "warning" in captured.out.lower() or "could not save" in captured.out.lower()
