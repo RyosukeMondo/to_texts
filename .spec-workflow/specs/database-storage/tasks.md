@@ -171,7 +171,7 @@
 
 ## Phase 5: Integration Testing & Polish (Est: 2-3 days)
 
-- [ ] 19. Create CLI integration tests
+- [x] 19. Create CLI integration tests
   - Files: `tests/test_cli_db_integration.py` (~250 lines)
   - Test end-to-end workflows: search→store→browse→save→list operations
   - Use temp database and mock Z-Library client
