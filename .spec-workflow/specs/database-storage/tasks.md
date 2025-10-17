@@ -11,7 +11,7 @@
   - _Requirements: All requirements (data foundation)_
   - _Prompt: Implement the task for spec database-storage, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Python Data Modeling Expert with expertise in dataclasses and type systems | Task: Create comprehensive dataclasses for Book, Author, ReadingList, Download, and SearchHistory following the exact pattern from zlibrary_downloader/credential.py including to_dict/from_dict serialization methods and proper type hints covering all database requirements | Restrictions: Must use dataclasses only (no ORM), follow Python 3.8+ compatibility, include Optional types appropriately, no complex validation logic in models (keep them simple data containers), file must be ≤200 lines | _Leverage: Read zlibrary_downloader/credential.py for the exact pattern to follow (Credential class shows serialization, Optional fields, datetime handling) | _Requirements: All requirements (provides data structures for books, authors, lists, downloads, search history) | Success: All dataclasses defined with complete type hints, to_dict/from_dict methods work correctly, follows Credential pattern exactly, passes mypy strict mode, ≤200 lines | Instructions: First edit tasks.md to change this task from [ ] to [-], implement the models, test serialization works, then change [-] to [x] in tasks.md_
 
-- [ ] 2. Create database schema SQL
+- [x] 2. Create database schema SQL
   - Files: `zlibrary_downloader/schema.py` (~150 lines)
   - Define SQL schema for all tables with indexes and foreign keys
   - Include schema version tracking table
