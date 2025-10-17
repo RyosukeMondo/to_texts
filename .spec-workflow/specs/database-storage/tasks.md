@@ -125,7 +125,7 @@
 
 ## Phase 4: CLI Integration (Est: 3-4 days)
 
-- [ ] 14. Add database command group to CLI
+- [x] 14. Add database command group to CLI
   - Files: `zlibrary_downloader/cli.py` (modify existing, add ~200 lines total for all db commands)
   - Create `db` subcommand group with argparse
   - Add db init, browse, show, save, unsave, saved commands

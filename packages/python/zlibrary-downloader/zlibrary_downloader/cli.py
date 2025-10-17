@@ -630,6 +630,13 @@ Examples:
   Advanced search:
     ./run.sh --title "Data Science" --format epub --language english --order year --download
 
+  Database commands:
+    ./run.sh db init                           # Initialize database
+    ./run.sh db browse --language english      # Browse books
+    ./run.sh db show 123                       # Show book details
+    ./run.sh db save 123 --notes "Must read"   # Save book
+    ./run.sh db saved                          # List saved books
+
 Available formats: pdf, epub, mobi, azw3, fb2, txt, djvu, etc.
 Available languages: english, spanish, french, german, russian, etc.
 Available order: popular, year, title
@@ -644,6 +651,60 @@ Credential Configuration:
     """
 
 
+def _add_db_browse_parser(db_subparsers: argparse._SubParsersAction) -> None:
+    """Add db browse subcommand parser"""
+    browse_parser = db_subparsers.add_parser("browse", help="Browse books in database")
+    browse_parser.add_argument("--query", type=str, help="Search query for books")
+    browse_parser.add_argument("--language", type=str, help="Filter by language")
+    browse_parser.add_argument("--year-from", type=int, help="Filter from year")
+    browse_parser.add_argument("--year-to", type=int, help="Filter to year")
+    browse_parser.add_argument("--format", type=str, help="Filter by file format")
+    browse_parser.add_argument("--author", type=str, help="Filter by author name")
+    browse_parser.add_argument("--limit", type=int, default=50, help="Limit results")
+    browse_parser.set_defaults(func="db_browse")
+
+
+def _add_db_save_parser(db_subparsers: argparse._SubParsersAction) -> None:
+    """Add db save subcommand parser"""
+    save_parser = db_subparsers.add_parser("save", help="Save a book to collection")
+    save_parser.add_argument("book_id", type=int, help="Book ID to save")
+    save_parser.add_argument("--notes", type=str, help="Notes about the book")
+    save_parser.add_argument("--tags", type=str, help="Comma-separated tags")
+    save_parser.add_argument("--priority", type=int, choices=[1, 2, 3, 4, 5],
+                           help="Priority (1-5)")
+    save_parser.set_defaults(func="db_save")
+
+
+def _add_simple_db_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+    """Add simple db subcommand parsers (init, show, unsave, saved)"""
+    init_parser = db_subparsers.add_parser("init", help="Initialize the book database")
+    init_parser.set_defaults(func="db_init")
+
+    show_parser = db_subparsers.add_parser("show", help="Show detailed book information")
+    show_parser.add_argument("book_id", type=int, help="Book ID to display")
+    show_parser.set_defaults(func="db_show")
+
+    unsave_parser = db_subparsers.add_parser("unsave", help="Remove book from collection")
+    unsave_parser.add_argument("book_id", type=int, help="Book ID to unsave")
+    unsave_parser.set_defaults(func="db_unsave")
+
+    saved_parser = db_subparsers.add_parser("saved", help="List saved books")
+    saved_parser.set_defaults(func="db_saved")
+
+
+def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
+    """Add database subcommand arguments to parser"""
+    db_parser = subparsers.add_parser(
+        "db",
+        help="Database operations for managing book library",
+        description="Manage local book database"
+    )
+    db_subparsers = db_parser.add_subparsers(dest="db_command", help="Database commands")
+    _add_simple_db_parsers(db_subparsers)
+    _add_db_browse_parser(db_subparsers)
+    _add_db_save_parser(db_subparsers)
+
+
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser"""
     parser = argparse.ArgumentParser(
@@ -656,6 +717,11 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     add_mode_arguments(parser)
     add_search_arguments(parser)
+
+    # Add subparsers for db commands
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    add_db_arguments(subparsers)
+
     return parser
 
 
@@ -680,10 +746,49 @@ def select_and_run_mode(
             interactive_mode(z_client, client_pool)
 
 
+def _get_db_command_handlers() -> Dict[str, Any]:
+    """Get mapping of db command names to handler functions"""
+    try:
+        from . import db_commands
+        return {
+            'init': db_commands.db_init_command,
+            'browse': db_commands.db_browse_command,
+            'show': db_commands.db_show_command,
+            'save': db_commands.db_save_command,
+            'unsave': db_commands.db_unsave_command,
+            'saved': db_commands.db_saved_command,
+        }
+    except ImportError:
+        print("Error: Database commands module not available yet")
+        print("Database functionality will be available in the next release")
+        sys.exit(1)
+
+
+def handle_db_commands(args: argparse.Namespace) -> None:
+    """Route db commands to appropriate handlers"""
+    if not hasattr(args, 'db_command') or args.db_command is None:
+        print("Error: No database command specified")
+        print("Use 'db --help' to see available commands")
+        sys.exit(1)
+
+    command_map = _get_db_command_handlers()
+    handler = command_map.get(args.db_command)
+    if handler:
+        handler(args)
+    else:
+        print(f"Error: Unknown db command: {args.db_command}")
+        sys.exit(1)
+
+
 def main() -> None:
     """Main function"""
     parser = create_argument_parser()
     args = parser.parse_args()
+
+    # Check if this is a db command
+    if hasattr(args, 'command') and args.command == 'db':
+        handle_db_commands(args)
+        return
 
     print("Z-Library Book Downloader")
     print("=" * 60)
