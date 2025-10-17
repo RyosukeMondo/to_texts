@@ -389,19 +389,22 @@ def download_book(
     book: Dict[str, Any],
     client_pool: Optional[ZlibraryClientPool] = None,
     download_dir: str = "downloads",
+    download_service: Any = None,
 ) -> Optional[str]:
     """
     Download a book from Z-Library.
 
     Automatically rotates to next credential and updates download limits
     after successful download when using multi-credential setup. Implements
-    retry logic with next credential on failures.
+    retry logic with next credential on failures. Optionally records
+    download to database.
 
     Args:
         z_client: Z-Library client to use for download
         book: Book metadata dictionary
         client_pool: Optional client pool for credential rotation
         download_dir: Directory to save downloaded books
+        download_service: Optional DownloadService for tracking
 
     Returns:
         Optional[str]: Path to downloaded file or None if download failed
@@ -436,6 +439,24 @@ def download_book(
 
             filepath = _perform_download(current_client, book, download_dir)
 
+            # Record download in database if service available
+            if download_service:
+                try:
+                    credential_id = (
+                        client_pool.credential_manager.get_current().id
+                        if client_pool and client_pool.credential_manager.get_current()
+                        else None
+                    )
+                    download_service.record_download(
+                        book_id=str(book.get("id", "")),
+                        credential_id=credential_id,
+                        filename=os.path.basename(filepath),
+                        path=filepath,
+                        size=os.path.getsize(filepath),
+                    )
+                except Exception as db_error:
+                    logger.warning(f"Failed to record download in database: {db_error}")
+
             # Update download limits and rotate after successful download
             if client_pool:
                 _update_download_limits(client_pool)
@@ -468,6 +489,7 @@ def prompt_for_download(
     z_client: Zlibrary,
     books: List[Dict[str, Any]],
     client_pool: Optional[ZlibraryClientPool] = None,
+    download_service: Any = None,
 ) -> None:
     """Prompt user to select and download a book from the list"""
     download_choice = input("\nEnter book number to download (or 'n' to skip): ").strip()
@@ -475,7 +497,7 @@ def prompt_for_download(
         try:
             book_idx = int(download_choice) - 1
             if 0 <= book_idx < len(books):
-                download_book(z_client, books[book_idx], client_pool)
+                download_book(z_client, books[book_idx], client_pool, download_service=download_service)
             else:
                 print("Invalid book number")
         except ValueError:
@@ -797,6 +819,40 @@ def _add_list_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     lists_parser.set_defaults(func="db_lists")
 
 
+def _add_utility_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+    """Add database utility subcommand parsers"""
+    # downloads
+    downloads_parser = db_subparsers.add_parser(
+        "downloads", help="Show download history"
+    )
+    downloads_parser.add_argument("--recent", type=int, help="Days to look back")
+    downloads_parser.add_argument("--credential", type=str, help="Filter by credential ID")
+    downloads_parser.add_argument("--limit", type=int, default=50, help="Limit results")
+    downloads_parser.set_defaults(func="db_downloads")
+
+    # stats
+    stats_parser = db_subparsers.add_parser("stats", help="Show database statistics")
+    stats_parser.set_defaults(func="db_stats")
+
+    # export
+    export_parser = db_subparsers.add_parser("export", help="Export books to file")
+    export_parser.add_argument(
+        "--format", type=str, choices=["json", "csv"], default="json",
+        help="Export format"
+    )
+    export_parser.add_argument("--output", type=str, help="Output filename")
+    export_parser.set_defaults(func="db_export")
+
+    # import
+    import_parser = db_subparsers.add_parser("import", help="Import books from JSON")
+    import_parser.add_argument("input", type=str, help="Input JSON file")
+    import_parser.set_defaults(func="db_import")
+
+    # vacuum
+    vacuum_parser = db_subparsers.add_parser("vacuum", help="Optimize database")
+    vacuum_parser.set_defaults(func="db_vacuum")
+
+
 def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
     """Add database subcommand arguments to parser"""
     db_parser = subparsers.add_parser(
@@ -809,6 +865,7 @@ def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
     _add_db_browse_parser(db_subparsers)
     _add_db_save_parser(db_subparsers)
     _add_list_parsers(db_subparsers)
+    _add_utility_parsers(db_subparsers)
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -869,6 +926,11 @@ def _get_db_command_handlers() -> Dict[str, Any]:
             'list-remove': db_commands.db_list_remove_command,
             'list-delete': db_commands.db_list_delete_command,
             'lists': db_commands.db_lists_command,
+            'downloads': db_commands.db_downloads_command,
+            'stats': db_commands.db_stats_command,
+            'export': db_commands.db_export_command,
+            'import': db_commands.db_import_command,
+            'vacuum': db_commands.db_vacuum_command,
         }
     except ImportError:
         print("Error: Database commands module not available yet")
