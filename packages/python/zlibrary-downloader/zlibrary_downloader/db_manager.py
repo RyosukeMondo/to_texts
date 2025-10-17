@@ -7,7 +7,7 @@ schema initialization, and transaction support following the CredentialManager p
 import os
 import sqlite3
 from pathlib import Path
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from . import schema
 
@@ -22,23 +22,24 @@ class DatabaseManager:
     provides schema initialization, transaction support, and proper cleanup.
 
     Attributes:
-        db_path: Path to the SQLite database file
+        db_path: Path to the SQLite database file or ":memory:" string
         connection: Active SQLite connection (None until initialized)
     """
 
     DEFAULT_DB_PATH = Path.home() / ".zlibrary" / "books.db"
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Optional[Union[Path, str]] = None):
         """
         Initialize DatabaseManager.
 
         Args:
-            db_path: Path to database file (optional, defaults to ~/.zlibrary/books.db)
+            db_path: Path to database file, str for :memory:, or None for default
         """
         env_db_path = os.getenv("ZLIBRARY_DB_PATH")
         if env_db_path:
-            self.db_path = Path(env_db_path)
+            self.db_path: Union[Path, str] = Path(env_db_path)
         elif db_path:
+            # Handle str for :memory: and Path for file paths
             self.db_path = db_path
         else:
             self.db_path = self.DEFAULT_DB_PATH
@@ -47,10 +48,16 @@ class DatabaseManager:
 
     def _ensure_directory_exists(self) -> None:
         """Ensure database directory exists with proper permissions."""
+        # Skip for in-memory databases
+        if isinstance(self.db_path, str):
+            return
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _set_file_permissions(self) -> None:
         """Set database file permissions to 600 on Unix systems."""
+        # Skip for in-memory databases
+        if isinstance(self.db_path, str):
+            return
         if os.name != "nt" and self.db_path.exists():
             os.chmod(self.db_path, 0o600)
 
