@@ -40,7 +40,7 @@
 
 ## Phase 2: Repository Layer (Est: 4-5 days)
 
-- [ ] 5. Implement BookRepository
+- [x] 5. Implement BookRepository
   - Files: `zlibrary_downloader/book_repository.py` (~250 lines)
   - Implement CRUD operations: create, get_by_id, search, update, upsert, delete, count
   - Use parameterized queries for all SQL operations
