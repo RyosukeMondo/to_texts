@@ -36,6 +36,9 @@ A feature-rich CLI and TUI tool for searching and downloading books from Z-Libra
 - Advanced search with filters (format, year, language)
 - Command-line interface for automation
 - Download books in various formats
+- **Local database for cataloging and organizing your collection**
+- Reading lists and saved books management
+- Download tracking and search history
 
 **Quick Start:**
 ```bash
@@ -46,6 +49,39 @@ cd packages/python/zlibrary-downloader
 ```
 
 **Documentation:** [Z-Library Downloader README](packages/python/zlibrary-downloader/README.md)
+
+#### Database Features
+
+The Z-Library Downloader includes a powerful local SQLite database for managing your book collection:
+
+- **Catalog Building:** Store search results locally for offline browsing
+- **Advanced Filtering:** Browse by language, year, format, author, or text query
+- **Reading Lists:** Create and manage multiple reading lists with ordered books
+- **Saved Books:** Mark favorites with notes, tags, and priority levels
+- **Download Tracking:** Automatic tracking of all downloads with history
+- **Import/Export:** Backup and restore your catalog in JSON/CSV formats
+- **Statistics:** View detailed stats about your collection
+
+**Database Quick Start:**
+```bash
+# Initialize database
+zlibrary-downloader db init
+
+# Search and store results
+zlibrary-downloader search --title "Python" --save-db
+
+# Browse your catalog
+zlibrary-downloader db browse --language english --format pdf
+
+# Create a reading list
+zlibrary-downloader db list-create "To Read"
+zlibrary-downloader db list-add "To Read" <book-id>
+
+# Export your catalog
+zlibrary-downloader db export --output my_books.json
+```
+
+**Full Database Guide:** [Database Features Guide](docs/database-guide.md)
 
 ---
 
