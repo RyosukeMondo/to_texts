@@ -20,7 +20,7 @@
   - _Requirements: All requirements (database structure)_
   - _Prompt: Implement the task for spec database-storage, first run spec-workflow-guide to get the workflow guide then implement the task: Role: Database Designer with expertise in SQLite schema design and normalization | Task: Create schema.py module containing SQL CREATE TABLE statements for all 8 tables (books, authors, book_authors, reading_lists, list_books, saved_books, downloads, search_history) with proper indexes, foreign keys, and a schema_version table, following the database schema from the design document | Restrictions: Use SQLite-compatible SQL only, parameterized CREATE IF NOT EXISTS statements, include all indexes from design, use proper foreign key constraints with ON DELETE CASCADE, file must be ≤150 lines | _Leverage: Read design.md Data Models section for complete schema definition | _Requirements: All requirements (database structure) | Success: All tables defined with correct columns and types, indexes created on frequently queried columns (title, language, year), foreign keys with proper cascading, schema_version table included, ≤150 lines, SQL is valid SQLite syntax | Instructions: First edit tasks.md changing [ ] to [-], create schema.py with SQL strings, validate SQL syntax, then change [-] to [x] in tasks.md_
 
-- [ ] 3. Implement DatabaseManager class
+- [x] 3. Implement DatabaseManager class
   - Files: `zlibrary_downloader/db_manager.py` (~150 lines)
   - Create connection management, schema initialization, transaction support
   - Follow CredentialManager pattern for lifecycle management
