@@ -11,7 +11,9 @@ from .db_manager import DatabaseManager
 from .book_service import BookService, BookDetails, SavedBook
 from .book_repository import BookRepository
 from .author_repository import AuthorRepository
-from .models import Book, Author
+from .list_service import ListService
+from .list_repository import ReadingListRepository
+from .models import Book, Author, ReadingList
 
 
 def db_init_command(args: argparse.Namespace) -> None:
@@ -250,4 +252,191 @@ def db_saved_command(args: argparse.Namespace) -> None:
 
     except Exception as e:
         print(f"❌ Error listing saved books: {e}")
+        raise
+
+
+def db_list_create_command(args: argparse.Namespace) -> None:
+    """
+    Create a new reading list.
+
+    Args:
+        args: Command line arguments with list name and description
+    """
+    try:
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        reading_list = list_service.create_list(
+            name=args.name, description=getattr(args, "description", "") or ""
+        )
+
+        print(f"✓ Created reading list: {reading_list.name}")
+
+    except ValueError as e:
+        print(f"❌ {e}")
+    except Exception as e:
+        print(f"❌ Error creating list: {e}")
+        raise
+
+
+def db_list_show_command(args: argparse.Namespace) -> None:
+    """
+    Show books in a reading list.
+
+    Args:
+        args: Command line arguments with list name
+    """
+    try:
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        author_repo = AuthorRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        reading_list, books = list_service.get_list_with_books(args.name)
+
+        print(f"\nReading List: {reading_list.name}")
+        if reading_list.description:
+            print(f"Description: {reading_list.description}")
+        print(f"Created: {reading_list.created_at}")
+        print(f"\nBooks ({len(books)}):\n")
+
+        if not books:
+            print("  (No books in this list)")
+            print("  Use 'db list-add' to add books")
+        else:
+            for idx, book in enumerate(books, 1):
+                authors = author_repo.get_authors_for_book(book.id)
+                print(f"{idx}. {_format_book_row(book, authors)}")
+
+    except ValueError as e:
+        print(f"❌ {e}")
+    except Exception as e:
+        print(f"❌ Error showing list: {e}")
+        raise
+
+
+def db_list_add_command(args: argparse.Namespace) -> None:
+    """
+    Add a book to a reading list.
+
+    Args:
+        args: Command line arguments with list name and book ID
+    """
+    try:
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        list_service.add_book_to_list(args.name, str(args.book_id))
+        print(f"✓ Added book {args.book_id} to list '{args.name}'")
+
+    except ValueError as e:
+        print(f"❌ {e}")
+    except Exception as e:
+        print(f"❌ Error adding book to list: {e}")
+        raise
+
+
+def db_list_remove_command(args: argparse.Namespace) -> None:
+    """
+    Remove a book from a reading list.
+
+    Args:
+        args: Command line arguments with list name and book ID
+    """
+    try:
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        removed = list_service.remove_book_from_list(args.name, str(args.book_id))
+
+        if removed:
+            print(f"✓ Removed book {args.book_id} from list '{args.name}'")
+        else:
+            print(f"Book {args.book_id} was not in list '{args.name}'")
+
+    except ValueError as e:
+        print(f"❌ {e}")
+    except Exception as e:
+        print(f"❌ Error removing book from list: {e}")
+        raise
+
+
+def db_list_delete_command(args: argparse.Namespace) -> None:
+    """
+    Delete a reading list with confirmation.
+
+    Args:
+        args: Command line arguments with list name
+    """
+    try:
+        # Prompt for confirmation
+        confirmation = input(
+            f"Are you sure you want to delete list '{args.name}'? (y/N): "
+        ).strip().lower()
+
+        if confirmation != "y":
+            print("Cancelled")
+            return
+
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        deleted = list_service.delete_list(args.name)
+
+        if deleted:
+            print(f"✓ Deleted reading list: {args.name}")
+        else:
+            print(f"List '{args.name}' not found")
+
+    except Exception as e:
+        print(f"❌ Error deleting list: {e}")
+        raise
+
+
+def db_lists_command(args: argparse.Namespace) -> None:
+    """
+    List all reading lists with book counts.
+
+    Args:
+        args: Command line arguments (unused)
+    """
+    try:
+        db_manager = DatabaseManager()
+        list_repo = ReadingListRepository(db_manager)
+        book_repo = BookRepository(db_manager)
+        list_service = ListService(list_repo, book_repo)
+
+        lists = list_service.get_all_lists()
+
+        if not lists:
+            print("No reading lists found.")
+            print("Use 'db list-create' to create one.")
+            return
+
+        print(f"\nReading Lists ({len(lists)}):\n")
+
+        for idx, reading_list in enumerate(lists, 1):
+            books = (
+                list_repo.get_books(reading_list.id) if reading_list.id else []
+            )
+            book_count = len(books)
+
+            print(f"{idx}. {reading_list.name}")
+            print(f"   Books: {book_count}")
+            if reading_list.description:
+                print(f"   Description: {reading_list.description}")
+            print(f"   Created: {reading_list.created_at}")
+            print()
+
+    except Exception as e:
+        print(f"❌ Error listing reading lists: {e}")
         raise

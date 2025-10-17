@@ -16,11 +16,17 @@ from zlibrary_downloader.db_commands import (
     db_save_command,
     db_unsave_command,
     db_saved_command,
+    db_list_create_command,
+    db_list_show_command,
+    db_list_add_command,
+    db_list_remove_command,
+    db_list_delete_command,
+    db_lists_command,
     _format_book_row,
     _display_book_details,
     _display_saved_book,
 )
-from zlibrary_downloader.models import Book, Author
+from zlibrary_downloader.models import Book, Author, ReadingList
 from zlibrary_downloader.book_service import BookDetails, SavedBook
 
 
@@ -432,3 +438,182 @@ class TestDbSavedCommand:
         captured = capsys.readouterr()
         assert "No saved books found" in captured.out
         assert "Use 'db save" in captured.out
+
+
+@pytest.fixture
+def sample_reading_list() -> ReadingList:
+    """Create a sample reading list for testing."""
+    return ReadingList(
+        id=1,
+        name="Test List",
+        description="Test description",
+        created_at=datetime.now(),
+    )
+
+
+class TestDbListCreateCommand:
+    """Tests for db_list_create_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    def test_create_list_success(
+        self, mock_db, mock_list_repo, mock_book_repo, mock_service, sample_reading_list, capsys
+    ):
+        """Test creating list successfully."""
+        args = argparse.Namespace(name="Test List", description="Test description")
+
+        mock_svc = Mock()
+        mock_svc.create_list.return_value = sample_reading_list
+        mock_service.return_value = mock_svc
+
+        db_list_create_command(args)
+
+        mock_svc.create_list.assert_called_once_with(
+            name="Test List", description="Test description"
+        )
+        captured = capsys.readouterr()
+        assert "Created reading list: Test List" in captured.out
+
+
+class TestDbListShowCommand:
+    """Tests for db_list_show_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.AuthorRepository")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    def test_show_list_with_books(
+        self,
+        mock_db,
+        mock_list_repo,
+        mock_book_repo,
+        mock_author_repo,
+        mock_service,
+        sample_reading_list,
+        sample_book,
+        sample_authors,
+        capsys,
+    ):
+        """Test showing list with books."""
+        args = argparse.Namespace(name="Test List")
+
+        mock_svc = Mock()
+        mock_svc.get_list_with_books.return_value = (sample_reading_list, [sample_book])
+        mock_service.return_value = mock_svc
+
+        mock_author_inst = Mock()
+        mock_author_inst.get_authors_for_book.return_value = sample_authors
+        mock_author_repo.return_value = mock_author_inst
+
+        db_list_show_command(args)
+
+        captured = capsys.readouterr()
+        assert "Reading List: Test List" in captured.out
+        assert "Books (1)" in captured.out
+
+
+class TestDbListAddCommand:
+    """Tests for db_list_add_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    def test_add_book_success(
+        self, mock_db, mock_list_repo, mock_book_repo, mock_service, capsys
+    ):
+        """Test adding book to list successfully."""
+        args = argparse.Namespace(name="Test List", book_id=123)
+
+        mock_svc = Mock()
+        mock_service.return_value = mock_svc
+
+        db_list_add_command(args)
+
+        mock_svc.add_book_to_list.assert_called_once_with("Test List", "123")
+        captured = capsys.readouterr()
+        assert "Added book 123 to list 'Test List'" in captured.out
+
+
+class TestDbListRemoveCommand:
+    """Tests for db_list_remove_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    def test_remove_book_success(
+        self, mock_db, mock_list_repo, mock_book_repo, mock_service, capsys
+    ):
+        """Test removing book from list successfully."""
+        args = argparse.Namespace(name="Test List", book_id=123)
+
+        mock_svc = Mock()
+        mock_svc.remove_book_from_list.return_value = True
+        mock_service.return_value = mock_svc
+
+        db_list_remove_command(args)
+
+        captured = capsys.readouterr()
+        assert "Removed book 123 from list 'Test List'" in captured.out
+
+
+class TestDbListDeleteCommand:
+    """Tests for db_list_delete_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    @patch("builtins.input", return_value="y")
+    def test_delete_list_confirmed(
+        self, mock_input, mock_db, mock_list_repo, mock_book_repo, mock_service, capsys
+    ):
+        """Test deleting list with confirmation."""
+        args = argparse.Namespace(name="Test List")
+
+        mock_svc = Mock()
+        mock_svc.delete_list.return_value = True
+        mock_service.return_value = mock_svc
+
+        db_list_delete_command(args)
+
+        captured = capsys.readouterr()
+        assert "Deleted reading list: Test List" in captured.out
+
+
+class TestDbListsCommand:
+    """Tests for db_lists_command."""
+
+    @patch("zlibrary_downloader.db_commands.ListService")
+    @patch("zlibrary_downloader.db_commands.BookRepository")
+    @patch("zlibrary_downloader.db_commands.ReadingListRepository")
+    @patch("zlibrary_downloader.db_commands.DatabaseManager")
+    def test_lists_with_results(
+        self,
+        mock_db,
+        mock_list_repo,
+        mock_book_repo,
+        mock_service,
+        sample_reading_list,
+        capsys,
+    ):
+        """Test listing reading lists with results."""
+        args = argparse.Namespace()
+
+        mock_svc = Mock()
+        mock_svc.get_all_lists.return_value = [sample_reading_list]
+        mock_service.return_value = mock_svc
+
+        mock_repo = Mock()
+        mock_repo.get_books.return_value = []
+        mock_list_repo.return_value = mock_repo
+
+        db_lists_command(args)
+
+        captured = capsys.readouterr()
+        assert "Reading Lists (1)" in captured.out
+        assert "Test List" in captured.out

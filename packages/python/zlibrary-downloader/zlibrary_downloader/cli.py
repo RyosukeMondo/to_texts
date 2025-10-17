@@ -750,6 +750,53 @@ def _add_simple_db_parsers(db_subparsers: argparse._SubParsersAction) -> None:
     saved_parser.set_defaults(func="db_saved")
 
 
+def _add_list_parsers(db_subparsers: argparse._SubParsersAction) -> None:
+    """Add reading list subcommand parsers"""
+    # list-create
+    create_parser = db_subparsers.add_parser(
+        "list-create", help="Create a new reading list"
+    )
+    create_parser.add_argument("name", type=str, help="Name for the reading list")
+    create_parser.add_argument(
+        "--description", type=str, help="Optional description"
+    )
+    create_parser.set_defaults(func="db_list_create")
+
+    # list-show
+    show_parser = db_subparsers.add_parser(
+        "list-show", help="Show books in a reading list"
+    )
+    show_parser.add_argument("name", type=str, help="Name of the reading list")
+    show_parser.set_defaults(func="db_list_show")
+
+    # list-add
+    add_parser = db_subparsers.add_parser(
+        "list-add", help="Add a book to a reading list"
+    )
+    add_parser.add_argument("name", type=str, help="Name of the reading list")
+    add_parser.add_argument("book_id", type=int, help="Book ID to add")
+    add_parser.set_defaults(func="db_list_add")
+
+    # list-remove
+    remove_parser = db_subparsers.add_parser(
+        "list-remove", help="Remove a book from a reading list"
+    )
+    remove_parser.add_argument("name", type=str, help="Name of the reading list")
+    remove_parser.add_argument("book_id", type=int, help="Book ID to remove")
+    remove_parser.set_defaults(func="db_list_remove")
+
+    # list-delete
+    delete_parser = db_subparsers.add_parser(
+        "list-delete", help="Delete a reading list"
+    )
+    delete_parser.add_argument("name", type=str, help="Name of the reading list")
+    delete_parser.set_defaults(func="db_list_delete")
+
+    # lists
+    lists_parser = db_subparsers.add_parser("lists", help="List all reading lists")
+    lists_parser.set_defaults(func="db_lists")
+
+
 def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
     """Add database subcommand arguments to parser"""
     db_parser = subparsers.add_parser(
@@ -761,6 +808,7 @@ def add_db_arguments(subparsers: argparse._SubParsersAction) -> None:
     _add_simple_db_parsers(db_subparsers)
     _add_db_browse_parser(db_subparsers)
     _add_db_save_parser(db_subparsers)
+    _add_list_parsers(db_subparsers)
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -815,6 +863,12 @@ def _get_db_command_handlers() -> Dict[str, Any]:
             'save': db_commands.db_save_command,
             'unsave': db_commands.db_unsave_command,
             'saved': db_commands.db_saved_command,
+            'list-create': db_commands.db_list_create_command,
+            'list-show': db_commands.db_list_show_command,
+            'list-add': db_commands.db_list_add_command,
+            'list-remove': db_commands.db_list_remove_command,
+            'list-delete': db_commands.db_list_delete_command,
+            'lists': db_commands.db_lists_command,
         }
     except ImportError:
         print("Error: Database commands module not available yet")
