@@ -66,7 +66,8 @@ class ZlibraryClientPool:
         """
         Get the client for the currently active credential.
 
-        Returns cached client if available, otherwise creates a new one.
+        Returns cached client if available and authenticated, otherwise creates a new one.
+        Re-authenticates if the cached client session has expired.
 
         Returns:
             Optional[Zlibrary]: Current Zlibrary client, or None if unavailable
@@ -79,9 +80,20 @@ class ZlibraryClientPool:
         if current_credential is None:
             return None
 
-        # Return cached client if available
+        # Check if we have a cached client
         if current_credential.identifier in self.clients:
-            return self.clients[current_credential.identifier]
+            cached_client = self.clients[current_credential.identifier]
+            
+            # Verify the cached client is still authenticated
+            try:
+                if cached_client.isLoggedIn():
+                    return cached_client
+                else:
+                    # Session expired - remove from cache and create new client
+                    del self.clients[current_credential.identifier]
+            except Exception:
+                # Error checking login status - remove from cache
+                del self.clients[current_credential.identifier]
 
         # Create new client and cache it
         client = self._create_client(current_credential)
@@ -96,6 +108,7 @@ class ZlibraryClientPool:
 
         Rotates the credential manager to the next available credential,
         then returns the client for that credential (creating it if needed).
+        Re-authenticates if the cached client session has expired.
 
         Returns:
             Optional[Zlibrary]: Client for next credential, or None if all exhausted
@@ -108,9 +121,20 @@ class ZlibraryClientPool:
         if next_credential is None:
             return None  # All credentials exhausted
 
-        # Return cached client if available
+        # Check if we have a cached client
         if next_credential.identifier in self.clients:
-            return self.clients[next_credential.identifier]
+            cached_client = self.clients[next_credential.identifier]
+            
+            # Verify the cached client is still authenticated
+            try:
+                if cached_client.isLoggedIn():
+                    return cached_client
+                else:
+                    # Session expired - remove from cache and create new client
+                    del self.clients[next_credential.identifier]
+            except Exception:
+                # Error checking login status - remove from cache
+                del self.clients[next_credential.identifier]
 
         # Create new client and cache it
         client = self._create_client(next_credential)

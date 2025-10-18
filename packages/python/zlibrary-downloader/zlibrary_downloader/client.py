@@ -316,14 +316,23 @@ class Zlibrary:
 
     def __getBookFile(self, bookid: Union[int, str], hashid: str) -> Optional[tuple[str, bytes]]:
         response = self.__makeGetRequest(f"/eapi/book/{bookid}/{hashid}/file")
-        filename = response["file"]["description"]
+        
+        # Use description if available, otherwise fall back to title or a generic name
+        file_info = response.get("file", {})
+        filename = file_info.get("description") or file_info.get("title", f"book_{bookid}")
 
         with contextlib.suppress(Exception):
-            filename += " (" + response["file"]["author"] + ")"
+            author = file_info.get("author")
+            if author:
+                filename += " (" + author + ")"
 
-        filename += "." + response["file"]["extension"]
+        extension = file_info.get("extension", "pdf")
+        filename += "." + extension
 
-        ddl = response["file"]["downloadLink"]
+        ddl = file_info.get("downloadLink")
+        if not ddl:
+            return None
+            
         headers = self.__headers.copy()
         headers["authority"] = ddl.split("/")[2]
 

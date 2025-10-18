@@ -253,9 +253,13 @@ def search_books(
             # If save_to_db is enabled, use SearchService
             if save_to_db and search_service:
                 try:
+                    # SearchService.search_and_store expects query and filters separately
+                    # Remove 'message' from search_params since it will be passed as query
+                    db_filters = {k: v for k, v in search_params.items() if k != "message"}
+                    
                     # SearchService returns List[Book], convert back to API format
                     stored_books = search_service.search_and_store(
-                        current_client, query, **search_params
+                        current_client, query, **db_filters
                     )
                     # Still perform normal search to get full API response
                     results = current_client.search(**search_params)
@@ -291,6 +295,117 @@ def search_books(
     if last_error:
         print(f"❌ Error searching: {last_error}")
         logger.error(f"Search failed after {max_retries} attempts: {last_error}")
+
+    return None
+
+
+
+def search_books_multi_page(
+    z_client: Zlibrary,
+    query: str,
+    client_pool: Optional[ZlibraryClientPool] = None,
+    save_to_db: bool = False,
+    search_service: Any = None,
+    max_pages: Optional[int] = None,
+    all_pages: bool = False,
+    **kwargs: Any,
+) -> Optional[Dict[str, Any]]:
+    """
+    Search for books across multiple pages on Z-Library.
+
+    Performs multi-page searches by iterating through pages and aggregating results.
+    Can search a specific number of pages or all available pages until exhausted.
+    When save_to_db is enabled, saves all results from all pages to database.
+
+    Args:
+        z_client: Z-Library client to use for search
+        query: Search query string
+        client_pool: Optional client pool for credential rotation
+        save_to_db: Whether to save results to database (default: False)
+        search_service: SearchService instance for database storage
+        max_pages: Maximum number of pages to search (default: None)
+        all_pages: Search all pages until no more results (default: False)
+        **kwargs: Additional search parameters (format, year_from, year_to, etc.)
+
+    Returns:
+        Optional[Dict[str, Any]]: Aggregated search results or None if search failed
+    """
+    if not max_pages and not all_pages:
+        # Single page search - use original function
+        return search_books(z_client, query, client_pool, save_to_db, search_service, **kwargs)
+
+    print(f"\nMulti-page search for: {query}")
+    if max_pages:
+        print(f"Searching up to {max_pages} pages...")
+    else:
+        print("Searching all available pages...")
+
+    all_books: List[Dict[str, Any]] = []
+    page = kwargs.get("page", 1)
+    pages_searched = 0
+    total_books_stored = 0
+
+    while True:
+        # Check if we've reached max_pages limit
+        if max_pages and pages_searched >= max_pages:
+            print(f"\nReached maximum page limit ({max_pages})")
+            break
+
+        # Update page number for this iteration
+        kwargs["page"] = page
+        
+        print(f"\nSearching page {page}...")
+        
+        # Perform search for current page
+        results = search_books(
+            z_client, query, client_pool, save_to_db, search_service, **kwargs
+        )
+
+        if not results or not results.get("success", False):
+            print(f"Search failed on page {page}")
+            break
+
+        books = results.get("books", [])
+        if not books or len(books) == 0:
+            print(f"No more results found on page {page}")
+            break
+
+        # Aggregate books
+        all_books.extend(books)
+        pages_searched += 1
+        books_count = len(books)
+        
+        if save_to_db:
+            total_books_stored += books_count
+        
+        print(f"✓ Found {books_count} books on page {page} (Total: {len(all_books)})")
+
+        # Continue to next page
+        page += 1
+        
+        # Safety check: prevent infinite loops (max 1000 pages)
+        if page > 1000:
+            print("\n⚠️  Reached safety limit of 1000 pages")
+            break
+
+    # Create aggregated response
+    if all_books:
+        aggregated_results = {
+            "success": True,
+            "books": all_books,
+            "pages_searched": pages_searched,
+            "total_results": len(all_books),
+        }
+        
+        print(f"\n{'='*60}")
+        print(f"Multi-page search completed:")
+        print(f"  Pages searched: {pages_searched}")
+        print(f"  Total books found: {len(all_books)}")
+        if save_to_db:
+            print(f"  Books stored in database: {total_books_stored}")
+        print(f"{'='*60}")
+        
+        return aggregated_results
 
     return None
 
@@ -397,7 +512,8 @@ def download_book(
     Automatically rotates to next credential and updates download limits
     after successful download when using multi-credential setup. Implements
     retry logic with next credential on failures. Optionally records
-    download to database.
+    download to database. Skips already downloaded books if download_service
+    is provided.
 
     Args:
         z_client: Z-Library client to use for download
@@ -407,23 +523,48 @@ def download_book(
         download_service: Optional DownloadService for tracking
 
     Returns:
-        Optional[str]: Path to downloaded file or None if download failed
+        Optional[str]: Path to downloaded file or None if download failed/skipped
     """
     # Create downloads directory if it doesn't exist
     os.makedirs(download_dir, exist_ok=True)
+
+    # Check if book is already downloaded (skip if so)
+    book_id = str(book.get("id", ""))
+    if download_service and book_id:
+        try:
+            if download_service.check_if_downloaded(book_id):
+                print(f"⏭️  Already downloaded, skipping: {book.get('title', 'Unknown')}")
+                logger.info(f"Skipping already downloaded book: {book_id}")
+                return "SKIPPED"  # Return special value to indicate skip
+        except Exception as e:
+            logger.warning(f"Failed to check download status: {e}")
+            # Continue with download if check fails
 
     # Check for download limit warnings before attempting
     if client_pool:
         _check_download_limit_warning(client_pool.credential_manager)
 
-    max_retries = 3 if client_pool else 1
+    # Increase retries to match available credentials (up to 10 max to avoid infinite loops)
+    # This gives us more chances to find a working credential for each book
+    if client_pool:
+        available_creds = len([c for c in client_pool.credential_manager.credentials 
+                              if c.downloads_left > 0])
+        max_retries = min(available_creds, 10)  # Cap at 10 to avoid excessive retries
+    else:
+        max_retries = 1
+    
     last_error = None
 
     for attempt in range(max_retries):
         try:
             # Check if current credential has exhausted downloads
             if client_pool and not _check_and_skip_exhausted_credential(client_pool):
-                return None
+                # If we can't get a credential with downloads, try rotating
+                if attempt < max_retries - 1:
+                    client_pool.credential_manager.rotate()
+                    continue
+                else:
+                    return None
 
             # Use current client from pool
             current_client = (
@@ -434,6 +575,11 @@ def download_book(
 
             if not current_client:
                 logger.error("No available client for download")
+                if attempt < max_retries - 1:
+                    # Try rotating to next credential
+                    if client_pool:
+                        client_pool.credential_manager.rotate()
+                    continue
                 print("❌ Error: No available credentials for download")
                 return None
 
@@ -444,7 +590,7 @@ def download_book(
                 try:
                     # Note: credential_id is None as Credential doesn't have a database id
                     download_service.record_download(
-                        book_id=str(book.get("id", "")),
+                        book_id=book_id,
                         filename=os.path.basename(filepath),
                         file_path=filepath,
                         credential_id=None,
@@ -465,7 +611,7 @@ def download_book(
             current_cred = client_pool.credential_manager.get_current() if client_pool else None
             cred_id = current_cred.identifier if current_cred else "unknown"
 
-            logger.error(f"Download attempt {attempt + 1} failed with credential '{cred_id}': {e}")
+            logger.error(f"Download attempt {attempt + 1}/{max_retries} failed with credential '{cred_id}': {e}")
 
             # Try next credential if available
             if not _handle_operation_failure(
@@ -475,7 +621,7 @@ def download_book(
 
     # All retries exhausted
     if last_error:
-        print(f"❌ Error downloading book: {last_error}")
+        print(f"❌ Error downloading book after {max_retries} attempts: {last_error}")
         logger.error(f"Download failed after {max_retries} attempts: {last_error}")
 
     return None
@@ -511,7 +657,61 @@ def handle_search_mode(
         print("Search query cannot be empty")
         return
 
-    results = search_books(z_client, query, client_pool)
+    # Ask for multi-page search
+    multi_page = input("\nEnable multi-page search? (y/n, default: n): ").strip().lower()
+    max_pages = None
+    all_pages = False
+    
+    if multi_page == 'y':
+        all_pages_input = input("Search ALL pages until no more results? (y/n, default: n): ").strip().lower()
+        if all_pages_input == 'y':
+            all_pages = True
+            print("Will search all available pages")
+        else:
+            max_pages_input = input("Maximum number of pages to search (default: 5): ").strip()
+            try:
+                max_pages = int(max_pages_input) if max_pages_input else 5
+                print(f"Will search up to {max_pages} pages")
+            except ValueError:
+                print("Invalid number, using single page search")
+                max_pages = None
+
+    # Ask for database save
+    save_db_input = input("\nSave results to database? (y/n, default: n): ").strip().lower()
+    save_db = save_db_input == 'y'
+    
+    search_service = None
+    if save_db:
+        try:
+            from .db_manager import DatabaseManager
+            from .book_repository import BookRepository
+            from .author_repository import AuthorRepository
+            from .search_history_repository import SearchHistoryRepository
+            from .search_service import SearchService
+
+            print("Initializing database...")
+            db_manager = DatabaseManager()
+            db_manager.initialize_schema()
+
+            book_repo = BookRepository(db_manager)
+            author_repo = AuthorRepository(db_manager)
+            search_repo = SearchHistoryRepository(db_manager)
+            search_service = SearchService(book_repo, author_repo, search_repo)
+            print("✓ Database ready")
+        except Exception as e:
+            print(f"⚠️  Warning: Database initialization failed: {e}")
+            print("Continuing search without database storage...")
+            save_db = False
+
+    # Perform search
+    if max_pages or all_pages:
+        results = search_books_multi_page(
+            z_client, query, client_pool, save_db, search_service,
+            max_pages=max_pages, all_pages=all_pages
+        )
+    else:
+        results = search_books(z_client, query, client_pool, save_db, search_service)
+    
     if results and "books" in results and results["books"]:
         display_results(results)
         prompt_for_download(z_client, results["books"], client_pool)
@@ -595,13 +795,48 @@ def handle_search_results(
     results: Optional[Dict[str, Any]],
     download: bool,
     client_pool: Optional[ZlibraryClientPool] = None,
+    download_all: bool = False,
+    download_service: Any = None,
 ) -> None:
     """Handle search results and optional download"""
     if results and "books" in results and results["books"]:
         display_results(results)
-        if download:
+        
+        if download_all:
+            print(f"\n{'='*60}")
+            print(f"Downloading ALL {len(results['books'])} books...")
+            print(f"{'='*60}")
+            
+            successful = 0
+            failed = 0
+            skipped = 0
+            
+            for idx, book in enumerate(results["books"], 1):
+                print(f"\n[{idx}/{len(results['books'])}] Downloading: {book.get('title', 'Unknown')}")
+                try:
+                    result = download_book(z_client, book, client_pool, download_service=download_service)
+                    if result == "SKIPPED":
+                        skipped += 1
+                    elif result:
+                        successful += 1
+                    else:
+                        failed += 1
+                except Exception as e:
+                    print(f"❌ Failed to download: {e}")
+                    failed += 1
+            
+            print(f"\n{'='*60}")
+            print(f"Download Summary:")
+            print(f"  ✓ Successful: {successful}")
+            if skipped > 0:
+                print(f"  ⏭️  Skipped (already downloaded): {skipped}")
+            if failed > 0:
+                print(f"  ✗ Failed: {failed}")
+            print(f"{'='*60}")
+            
+        elif download:
             print("\nDownloading first result...")
-            download_book(z_client, results["books"][0], client_pool)
+            download_book(z_client, results["books"][0], client_pool, download_service=download_service)
     else:
         print("No results found.")
         sys.exit(1)
@@ -613,7 +848,11 @@ def command_line_mode(
     """Command line mode for direct search and optional download"""
     search_kwargs = build_search_kwargs(args)
     save_to_db = getattr(args, "save_db", False)
+    max_pages = getattr(args, "max_pages", None)
+    all_pages = getattr(args, "all_pages", False)
+    download_all = getattr(args, "download_all", False)
     search_service = None
+    download_service = None
 
     # Initialize database services if --save-db flag is present
     if save_to_db:
@@ -623,6 +862,8 @@ def command_line_mode(
             from .author_repository import AuthorRepository
             from .search_history_repository import SearchHistoryRepository
             from .search_service import SearchService
+            from .download_repository import DownloadRepository
+            from .download_service import DownloadService
 
             db_manager = DatabaseManager()
             db_manager.initialize_schema()
@@ -630,27 +871,43 @@ def command_line_mode(
             book_repo = BookRepository(db_manager)
             author_repo = AuthorRepository(db_manager)
             search_repo = SearchHistoryRepository(db_manager)
+            download_repo = DownloadRepository(db_manager)
             search_service = SearchService(book_repo, author_repo, search_repo)
+            download_service = DownloadService(download_repo)
         except Exception as e:
             logger.warning(f"Failed to initialize database: {e}")
             print(f"⚠️  Warning: Database initialization failed: {e}")
             print("Continuing search without database storage...")
             save_to_db = False
 
-    results = search_books(
-        z_client, args.title, client_pool, save_to_db, search_service, **search_kwargs
-    )
-    handle_search_results(z_client, results, args.download, client_pool)
+    # Use multi-page search if --max-pages or --all-pages is specified
+    if max_pages or all_pages:
+        results = search_books_multi_page(
+            z_client,
+            args.title,
+            client_pool,
+            save_to_db,
+            search_service,
+            max_pages=max_pages,
+            all_pages=all_pages,
+            **search_kwargs,
+        )
+    else:
+        results = search_books(
+            z_client, args.title, client_pool, save_to_db, search_service, **search_kwargs
+        )
+    
+    handle_search_results(z_client, results, args.download, client_pool, download_all, download_service)
 
 
-def tui_mode(z_client: Zlibrary) -> None:
+def tui_mode(z_client: Zlibrary, client_pool: Optional[ZlibraryClientPool] = None) -> None:
     """Interactive TUI mode with rich library"""
     if not TUI_AVAILABLE:
         print("Error: TUI mode requires the 'rich' library")
         print("Install it with: pip install rich")
         sys.exit(1)
 
-    tui = ZLibraryTUI(z_client)
+    tui = ZLibraryTUI(z_client, client_pool)
     tui.run()
 
 
@@ -668,6 +925,7 @@ def add_search_arguments(parser: argparse.ArgumentParser) -> None:
     """Add search and filter arguments to parser"""
     parser.add_argument("--title", type=str, help="Book title to search for")
     parser.add_argument("--download", action="store_true", help="Download the first result")
+    parser.add_argument("--download-all", action="store_true", help="Download ALL search results")
     parser.add_argument("--save-db", action="store_true", help="Save search results to database")
     parser.add_argument(
         "--format", type=str, help="File format (pdf, epub, mobi, azw3, fb2, txt, djvu, etc.)"
@@ -682,6 +940,8 @@ def add_search_arguments(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--limit", type=int, help="Maximum number of results to return")
     parser.add_argument("--page", type=int, help="Page number for pagination")
+    parser.add_argument("--max-pages", type=int, help="Maximum number of pages to search (for multi-page search)")
+    parser.add_argument("--all-pages", action="store_true", help="Search all available pages until no more results")
 
 
 def get_help_epilog() -> str:
@@ -770,6 +1030,30 @@ def _add_simple_db_parsers(db_subparsers: Any) -> None:
     saved_parser.set_defaults(func="db_saved")
 
 
+
+def _add_preview_parser(db_subparsers: Any) -> None:
+    """Add preview subcommand parser"""
+    preview_parser = db_subparsers.add_parser(
+        "preview", help="Generate HTML preview of books with covers"
+    )
+    preview_parser.add_argument(
+        "--limit", type=int, default=50, help="Maximum number of books to show (default: 50)"
+    )
+    preview_parser.add_argument(
+        "--language", type=str, help="Filter by language"
+    )
+    preview_parser.add_argument(
+        "--format", type=str, help="Filter by format (pdf, epub, etc.)"
+    )
+    preview_parser.add_argument(
+        "--year", type=str, help="Filter by publication year"
+    )
+    preview_parser.add_argument(
+        "--no-open", action="store_true", help="Don't automatically open browser"
+    )
+    preview_parser.set_defaults(func="db_preview")
+
+
 def _add_list_parsers(db_subparsers: Any) -> None:
     """Add reading list subcommand parsers"""
     # list-create
@@ -851,6 +1135,7 @@ def add_db_arguments(subparsers: Any) -> None:
     _add_db_save_parser(db_subparsers)
     _add_list_parsers(db_subparsers)
     _add_utility_parsers(db_subparsers)
+    _add_preview_parser(db_subparsers)
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -882,14 +1167,14 @@ def select_and_run_mode(
         command_line_mode(z_client, args, client_pool)
     elif args.tui:
         # TUI mode (rich interactive)
-        tui_mode(z_client)
+        tui_mode(z_client, client_pool)
     elif args.classic:
         # Classic interactive mode
         interactive_mode(z_client, client_pool)
     else:
         # Default: Use TUI if available, otherwise classic
         if TUI_AVAILABLE:
-            tui_mode(z_client)
+            tui_mode(z_client, client_pool)
         else:
             interactive_mode(z_client, client_pool)
 
@@ -917,6 +1202,7 @@ def _get_db_command_handlers() -> Dict[str, Any]:
             "export": db_commands.db_export_command,
             "import": db_commands.db_import_command,
             "vacuum": db_commands.db_vacuum_command,
+            "preview": db_commands.db_preview_command,
         }
     except ImportError:
         print("Error: Database commands module not available yet")
