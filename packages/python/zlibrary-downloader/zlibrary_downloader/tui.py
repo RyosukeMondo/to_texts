@@ -36,8 +36,9 @@ class ZLibraryTUI:
     ]
     SORT_ORDERS: List[str] = ["popular", "year", "title"]
 
-    def __init__(self, z_client: Any) -> None:
+    def __init__(self, z_client: Any, client_pool: Any = None) -> None:
         self.z_client: Any = z_client
+        self.client_pool: Any = client_pool
         self.current_results: Optional[List[Dict[str, Any]]] = None
 
     def show_welcome(self) -> None:
@@ -126,6 +127,46 @@ class ZLibraryTUI:
             page = max(1, page)
             params["page"] = page
 
+
+    def _prompt_for_multi_page(self, params: Dict[str, Any]) -> None:
+        """Prompt for multi-page search options"""
+        multi_page = Confirm.ask(
+            "[yellow]Enable multi-page search?[/yellow]", default=False, console=console
+        )
+        
+        if multi_page:
+            all_pages = Confirm.ask(
+                "[yellow]Search ALL pages until no more results?[/yellow]", 
+                default=False, 
+                console=console
+            )
+            
+            if all_pages:
+                params["all_pages"] = True
+                console.print("[green]Will search all available pages[/green]")
+            else:
+                max_pages_input = Prompt.ask(
+                    "[yellow]Maximum number of pages to search[/yellow]",
+                    default="5",
+                    console=console,
+                )
+                try:
+                    max_pages = int(max_pages_input)
+                    if max_pages > 0:
+                        params["max_pages"] = max_pages
+                        console.print(f"[green]Will search up to {max_pages} pages[/green]")
+                except ValueError:
+                    console.print("[red]Invalid number, using single page search[/red]")
+
+    def _prompt_for_save_db(self, params: Dict[str, Any]) -> None:
+        """Prompt for saving results to database"""
+        save_db = Confirm.ask(
+            "[yellow]Save search results to database?[/yellow]", default=False, console=console
+        )
+        if save_db:
+            params["save_db"] = True
+            console.print("[green]Results will be saved to database[/green]")
+
     def get_search_params(self) -> Dict[str, Any]:
         """Interactively collect search parameters"""
         console.print("\n[bold cyan]Search Parameters[/bold cyan]", style="bold")
@@ -140,6 +181,8 @@ class ZLibraryTUI:
         self._prompt_for_sort_order(params)
         self._prompt_for_limit(params)
         self._prompt_for_page(params)
+        self._prompt_for_multi_page(params)
+        self._prompt_for_save_db(params)
 
         return params
 
@@ -174,6 +217,18 @@ class ZLibraryTUI:
             param_text.append("Page: ", style="bold")
             param_text.append(f"{params['page']}\n")
 
+        # New multi-page parameters
+        if params.get("all_pages"):
+            param_text.append("Multi-page: ", style="bold green")
+            param_text.append("All pages (until exhausted)\n", style="green")
+        elif params.get("max_pages"):
+            param_text.append("Multi-page: ", style="bold green")
+            param_text.append(f"Up to {params['max_pages']} pages\n", style="green")
+
+        if params.get("save_db"):
+            param_text.append("Database: ", style="bold yellow")
+            param_text.append("Save results to database\n", style="yellow")
+
         panel = Panel(
             param_text, title="[bold cyan]Search Parameters[/bold cyan]", border_style="cyan"
         )
@@ -181,6 +236,82 @@ class ZLibraryTUI:
 
     def search_with_progress(self, params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Search with a progress indicator"""
+        # Check if multi-page search or save-to-db is enabled
+        max_pages = params.get("max_pages")
+        all_pages = params.get("all_pages", False)
+        save_db = params.get("save_db", False)
+        
+        # If multi-page or save-db, we need to use CLI functions
+        if max_pages or all_pages or save_db:
+            # Import necessary modules for multi-page and save-db
+            from . import cli
+            
+            # Initialize search service if save_db is enabled
+            search_service = None
+            if save_db:
+                try:
+                    from .db_manager import DatabaseManager
+                    from .book_repository import BookRepository
+                    from .author_repository import AuthorRepository
+                    from .search_history_repository import SearchHistoryRepository
+                    from .search_service import SearchService
+
+                    console.print("[yellow]Initializing database...[/yellow]")
+                    db_manager = DatabaseManager()
+                    db_manager.initialize_schema()
+
+                    book_repo = BookRepository(db_manager)
+                    author_repo = AuthorRepository(db_manager)
+                    search_repo = SearchHistoryRepository(db_manager)
+                    search_service = SearchService(book_repo, author_repo, search_repo)
+                    console.print("[green]✓ Database ready[/green]")
+                except Exception as e:
+                    console.print(f"[red]⚠️  Warning: Database initialization failed: {e}[/red]")
+                    console.print("[yellow]Continuing search without database storage...[/yellow]")
+                    save_db = False
+            
+            # Build search kwargs using ORIGINAL parameter names (not API names)
+            # The CLI functions will convert them to API names internally
+            search_kwargs = {}
+            if params.get("format"):
+                search_kwargs["format"] = params["format"]
+            if params.get("year_from"):
+                search_kwargs["year_from"] = params["year_from"]
+            if params.get("year_to"):
+                search_kwargs["year_to"] = params["year_to"]
+            if params.get("language"):
+                search_kwargs["language"] = params["language"]
+            if params.get("order"):
+                search_kwargs["order"] = params["order"]
+            if params.get("limit"):
+                search_kwargs["limit"] = params["limit"]
+            if params.get("page"):
+                search_kwargs["page"] = params["page"]
+            
+            # Use multi-page search if enabled
+            if max_pages or all_pages:
+                return cli.search_books_multi_page(
+                    self.z_client,
+                    params["title"],
+                    self.client_pool,
+                    save_db,
+                    search_service,
+                    max_pages=max_pages,
+                    all_pages=all_pages,
+                    **search_kwargs,
+                )
+            else:
+                # Single page with save_db
+                return cli.search_books(
+                    self.z_client,
+                    params["title"],
+                    self.client_pool,
+                    save_db,
+                    search_service,
+                    **search_kwargs,
+                )
+        
+        # Original single-page search without save-db
         with Progress(
             SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:

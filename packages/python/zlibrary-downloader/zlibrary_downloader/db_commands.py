@@ -7,7 +7,7 @@ using service layer for all operations and displaying user-friendly output.
 import argparse
 import json
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from .db_manager import DatabaseManager
 from .book_service import BookService, BookDetails, SavedBook
@@ -701,3 +701,258 @@ def db_vacuum_command(args: argparse.Namespace) -> None:
     except Exception as e:
         print(f"❌ Error optimizing database: {e}")
         raise
+
+
+
+def db_preview_command(args: Any) -> None:
+    """Generate HTML preview of books with cover images"""
+    import webbrowser
+    import tempfile
+    from pathlib import Path
+    
+    db_manager = DatabaseManager()
+    book_repo = BookRepository(db_manager)
+    author_repo = AuthorRepository(db_manager)
+    
+    # Build filters
+    filters = {}
+    if hasattr(args, 'language') and args.language:
+        filters['language'] = args.language
+    if hasattr(args, 'format') and args.format:
+        filters['format'] = args.format
+    if hasattr(args, 'year') and args.year:
+        filters['year'] = args.year
+    
+    # Get books
+    books = book_repo.search(**filters)
+    
+    # Limit results
+    limit = getattr(args, 'limit', 50)
+    books = books[:limit]
+    
+    if not books:
+        print("No books found in database.")
+        print("Try searching with --save-db to add books first.")
+        return
+    
+    # Generate HTML
+    html = generate_books_html(books, author_repo)
+    
+    # Save to temp file
+    temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8')
+    temp_file.write(html)
+    temp_file.close()
+    
+    temp_path = Path(temp_file.name)
+    print(f"\n✓ Generated preview: {temp_path}")
+    print(f"  Books displayed: {len(books)}")
+    
+    # Open in browser
+    if not getattr(args, 'no_open', False):
+        print(f"  Opening in browser...")
+        webbrowser.open(f'file://{temp_path}')
+    else:
+        print(f"\n  To view: open file://{temp_path}")
+
+
+def generate_books_html(books: list, author_repo: Any) -> str:
+    """Generate HTML page with book covers"""
+    
+    html_parts = ['''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Library Books Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+        .book-cover {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .book-cover.no-cover {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #999;
+        }
+        .book-info {
+            padding: 15px;
+        }
+        .book-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .book-author {
+            font-size: 0.9rem;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .book-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .meta-tag {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #f0f0f0;
+            color: #555;
+        }
+        .meta-tag.format {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .meta-tag.year {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .meta-tag.language {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            .book-cover {
+                height: 220px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Z-Library Books Collection</h1>
+            <p class="subtitle">Browse your saved books with beautiful cover images</p>
+        </header>
+        
+        <div class="stats">
+            <strong>''' + str(len(books)) + '''</strong> books displayed
+        </div>
+        
+        <div class="books-grid">
+''']
+    
+    # Add book cards
+    for book in books:
+        # Get authors
+        authors = author_repo.get_authors_for_book(book.id)
+        author_names = ", ".join([a.name for a in authors]) if authors else "Unknown Author"
+        
+        # Build cover image or placeholder
+        if book.cover_url:
+            cover_html = f'<img src="{book.cover_url}" alt="{book.title}" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector(\'.no-cover\').style.display=\'flex\'; this.style.display=\'none\';">'
+            cover_html += '<div class="book-cover no-cover" style="display:none;">📖</div>'
+        else:
+            cover_html = '<div class="book-cover no-cover">📖</div>'
+        
+        # Build meta tags
+        meta_tags = []
+        if book.extension:
+            meta_tags.append(f'<span class="meta-tag format">{book.extension.upper()}</span>')
+        if book.year:
+            meta_tags.append(f'<span class="meta-tag year">{book.year}</span>')
+        if book.language:
+            meta_tags.append(f'<span class="meta-tag language">{book.language}</span>')
+        
+        meta_html = ''.join(meta_tags)
+        
+        html_parts.append(f'''
+            <div class="book-card">
+                {cover_html}
+                <div class="book-info">
+                    <div class="book-title">{book.title}</div>
+                    <div class="book-author">{author_names}</div>
+                    <div class="book-meta">
+                        {meta_html}
+                    </div>
+                </div>
+            </div>
+        ''')
+    
+    html_parts.append('''
+        </div>
+    </div>
+</body>
+</html>
+''')
+    
+    return ''.join(html_parts)

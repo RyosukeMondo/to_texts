@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use std::fs;
+use std::panic;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -113,10 +114,15 @@ fn print_summary(processed_count: usize, error_count: usize) {
 
 fn extract_pdf_text(pdf_path: &Path, output_dir: &Path) -> Result<PathBuf> {
     // Extract text using pdf-extract which properly handles encodings
-    let text = pdf_extract::extract_text(pdf_path).context(format!(
+    // Catch panics from the pdf-extract library
+    let text = panic::catch_unwind(|| {
+        pdf_extract::extract_text(pdf_path)
+    })
+    .map_err(|_| anyhow::anyhow!("PDF extraction panicked (likely unsupported PDF feature)"))
+    .and_then(|r| r.context(format!(
         "Failed to extract text from PDF: {}",
         pdf_path.display()
-    ))?;
+    )))?;
 
     // Generate output file path
     let output_path = generate_output_path(pdf_path, output_dir, "txt")?;
