@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z-Library Books Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .book-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+        .book-cover {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .book-cover.no-cover {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #999;
+        }
+        .book-info {
+            padding: 15px;
+        }
+        .book-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .book-author {
+            font-size: 0.9rem;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .book-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .meta-tag {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #f0f0f0;
+            color: #555;
+        }
+        .meta-tag.format {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .meta-tag.year {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .meta-tag.language {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            .book-cover {
+                height: 220px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Z-Library Books Collection</h1>
+            <p class="subtitle">Browse your saved books with beautiful cover images</p>
+        </header>
+        
+        <div class="stats">
+            <strong>100</strong> books displayed
+        </div>
+        
+        <div class="books-grid">
+
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/03f32e6f3ba9570f9be8736e6e42a4e9e636297c90c0287d0a019122931ac690.jpg" alt="#1 Book for Python Programming: Learn From Basic Programming to AI and Automation" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">#1 Book for Python Programming: Learn From Basic Programming to AI and Automation</div>
+                    <div class="book-author">Minhaj Abdullah</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ed84fe4dea23ccf62011b3c7aef49baa00b5c85834a437476b5928844b8ae806.jpg" alt="190+ Python Interview Questions and Answers.MCQ Format Questions 2024" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">190+ Python Interview Questions and Answers.MCQ Format Questions 2024</div>
+                    <div class="book-author">Salunke M.</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/303f1eb445583cfa074c98fd25dd889ebf587d0fe3c6aad7ef5eab2aa4e7252d.png" alt="3D Data Science with Python" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/7f3cd0a5773f7be5a14ab4444e198fe699b965602cf6ae09555e9e98fcbb4db1.png" alt="3D Data Science with Python (for True Epub)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python (for True Epub)</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">Italian</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/eb8e16e2ccecb250f6c00a15cf1dbd5b9d2e4870589c26f10835b518224fcd00.jpg" alt="3D Data Science with Python (for True Epub)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python (for True Epub)</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/303f1eb445583cfa074c98fd25dd889ebf587d0fe3c6aad7ef5eab2aa4e7252d.png" alt="3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/3f14bf8e8766159de9a5ebb0c9cab133f7950ba6b9c66f156208c76aceb7a910.jpg" alt="3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/606e87d43ea3743c7a1bcac43405ae73fc15487836cd1ddc696e9f9d33b30909.jpg" alt="3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D Data Science with Python: Building Accurate Digital Environments with 3D Point Cloud Workflows</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/7fc9983b8de608efeb24494058c1564b458e3a8feec3cd994e8b06eedabc624b.png" alt="3D-Datenwissenschaft mit Python" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">3D-Datenwissenschaft mit Python</div>
+                    <div class="book-author">Florent Poux</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">German</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/99b58cf64417e51424bc5220973ea5331007a6f9dfab4ec953011f114005d40d.png" alt="50+ App Features with Python" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">50+ App Features with Python</div>
+                    <div class="book-author">Ylena Zorak</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/61d79cb1d45847a04ce6546b5e518ed2f15fc113041386cfb6393247fb4ed690.jpg" alt="A First Course in Statistical Learning: With Data Examples and Python Code" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">A First Course in Statistical Learning: With Data Examples and Python Code</div>
+                    <div class="book-author">Johannes Lederer</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ad937782606e1a4eb2f426802b5cb329e7a6d1b5b20d0364ef589ef3c6ea6af7.jpg" alt="A First Course in Statistical Learning: With Data Examples and Python Code" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">A First Course in Statistical Learning: With Data Examples and Python Code</div>
+                    <div class="book-author">Johannes Lederer</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d2697074c02b5636e5e0ec8711995331f71e9a7e1030079fb512b0864a1e1cd4.jpg" alt="A Step-by-Step Guide to Creating AI Chatbots Using Python, NLP, and Machine Learning" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">A Step-by-Step Guide to Creating AI Chatbots Using Python, NLP, and Machine Learning</div>
+                    <div class="book-author">Boniface, I.I., Freebon, Nolan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/7dc2f690795f25727326e862f7ec8d4a8d04f61fe8dce2ba944825cc44f76dbd.jpg" alt="AI AGENTS Awakening the Digital Mind: An Introduction to the Intelligent Era" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI AGENTS Awakening the Digital Mind: An Introduction to the Intelligent Era</div>
+                    <div class="book-author">Chakir, Larbi</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/49d0aef724321ed8787341fda4adb8b188c6d39324a4a0a5316c56bf8137af6c.jpg" alt="AI Agent in pratica" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agent in pratica</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">Italian</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0d9a2bc77b884d27442386576274a7c15303b4af515e5c65f951c2c6c4ec67a1.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/79573d4ede6bc508770b4252f982c215dab5169800f500c5d3f20d7924c77da4.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0ccc86ed6b3165466d6f8bfb285339d93b4931dd25618e3608f7127c213060b3.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/68efa686223c4e9527e81f49bdd7c86281a6b05bd3c9999e26060b65a70498be.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d252cb79acc4f632b464141840a1f3df66f63cac05dde14c1519c926125129f1.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/68efa686223c4e9527e81f49bdd7c86281a6b05bd3c9999e26060b65a70498be.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/79573d4ede6bc508770b4252f982c215dab5169800f500c5d3f20d7924c77da4.jpg" alt="AI Agents in Action" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Action</div>
+                    <div class="book-author">Micheal Lanham</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/23ba1ce507075d7b23ffa0f7945b09a7faba54f6b89b0e8c70e63e0a31dee0b9.png" alt="AI Agents in Practice (Early Access)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents in Practice (Early Access)</div>
+                    <div class="book-author">Valentina Alto</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/f100fc133021627103feeafd664f3a220b483369756741554551070df9cb960e.png" alt="AI Agents with MCP (First Early Release)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents with MCP (First Early Release)</div>
+                    <div class="book-author">Kyle Stratis</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d21f908edb7329cd33291d1630e9b6ba24137acd9dd043ae1fb55f650c1fd968.jpg" alt="AI Agents with Python: Build Autonomous Systems That Think, Learn, and Act" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents with Python: Build Autonomous Systems That Think, Learn, and Act</div>
+                    <div class="book-author">Hayden Van Der Post, Reactive Publishing</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/19bdf09108f277c6d0100df43c29b5e8c5807454da4e9d8698398cb04f86a8ba.jpg" alt="AI Agents with Python: Build Autonomous Systems That Think, Learn, and Act" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents with Python: Build Autonomous Systems That Think, Learn, and Act</div>
+                    <div class="book-author">Van Der Post, Hayden</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/873b5e71b85c543fa487250b133699ecb05af772e4e23b35d44335e1b88b7880.jpg" alt="AI Agents: What they are and how to build them using python and other no code tools: A Comprehensive Guide 2025" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agents: What they are and how to build them using python and other no code tools: A Comprehensive Guide 2025</div>
+                    <div class="book-author">Publishing, Reactive, Van Der Post, Hayden</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ee430dfbd91cc48f1b4b7548f6f7fca34569e247eb7209746ff1e114e2520d2d.png" alt="AI Agent开发与应用: 基于大模型的智能体构建" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agent开发与应用: 基于大模型的智能体构建</div>
+                    <div class="book-author">凌峰</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">MOBI</span><span class="meta-tag year">2025</span><span class="meta-tag language">Chinese</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/e81b299d82485c4bc320825faa27757c1a9bc76c9ab3448ecdd7c1ffd8161758.jpg" alt="AI Agent开发与应用:基于大模型的智能体构建 [转换版]" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agent开发与应用:基于大模型的智能体构建 [转换版]</div>
+                    <div class="book-author">凌峰</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">Chinese</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/a49ce16bded2cc9a45f36a610c82004e8c728e9cabe2ec82cb3421a797acdf4a.jpg" alt="AI Agent开发与应用：基于大模型的智能体构建" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agent开发与应用：基于大模型的智能体构建</div>
+                    <div class="book-author">凌峰</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">Chinese</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/bafefcdf026f32553667463518258c91fffb9475d18d8844e018a6eb2fa06781.jpg" alt="AI Agent开发与应用：基于大模型的智能体构建" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Agent开发与应用：基于大模型的智能体构建</div>
+                    <div class="book-author">凌峰</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">Chinese</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0d422b8efdd45974513235582b1a1ad0a2951987042fc1dac118f77c78cd9cc2.jpg" alt="AI IN MOTION : Create, Animated, Automate: Build smarter systems with N8N, Generative AI, and Autonomous Agents" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI IN MOTION : Create, Animated, Automate: Build smarter systems with N8N, Generative AI, and Autonomous Agents</div>
+                    <div class="book-author">Kandwal, Akshay</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0970935bf06a09c86b2c94db10812dc5da5d39817e871f93b8096da666d72c8f.jpg" alt="AI Strategy 2025 for Marketing Teams: ChatGPT, GPT4, Claude, SEO f LLMs, AI-agents, Prompts& much more_ How AI is Transforming Your Marketing Processes_ Tools, Trends, and Tactics for 2025_nodrm" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI Strategy 2025 for Marketing Teams: ChatGPT, GPT4, Claude, SEO f LLMs, AI-agents, Prompts& much more_ How AI is Transforming Your Marketing Processes_ Tools, Trends, and Tactics for 2025_nodrm</div>
+                    <div class="book-author">Henrik Roth</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0120391ef1f007784adfc941bb8f9b04f1db74f4f7d9cafaf0859f5c459a1573.jpg" alt="AI for Automation vs AI as Agents: Choosing the Right Path for Intelligent Systems" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI for Automation vs AI as Agents: Choosing the Right Path for Intelligent Systems</div>
+                    <div class="book-author">Kumar, Rakesh</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/973ea720b3f5b080af4e08278b5db689eec684f5aa23d477425067ba9760a680.jpg" alt="AI with Python: Practical Applicaitons & Advanced Techniques: Reactive Publishing" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">AI with Python: Practical Applicaitons & Advanced Techniques: Reactive Publishing</div>
+                    <div class="book-author">Van Der Post, Hayden</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/7b2ad0c0a296137d1ea07be0346f38ad163c1833dce3cf3cf9e53cab218838d0.jpg" alt="Advanced Python Programming: Techniques" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Advanced Python Programming: Techniques</div>
+                    <div class="book-author">B, Riya</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/4c64ff57e3fbdc699d976e0e15a933f56674df9abbdeeb832bc6020f88718aa6.jpg" alt="Advanced Robotics Programming with ROS2 and Python: Mastering Navigation, Sensing, and Multi-Robot Systems in Real-World Applications" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Advanced Robotics Programming with ROS2 and Python: Mastering Navigation, Sensing, and Multi-Robot Systems in Real-World Applications</div>
+                    <div class="book-author">Farmer, Miguel, Sanders, Rafael, CARTER, THOMPSON</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/399c8c6a742fd2c75113cbf21b1315832dcee37f59c0b661688481af2f32a11a.jpg" alt="Advanced Scientific Programming (Python)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Advanced Scientific Programming (Python)</div>
+                    <div class="book-author">Amir Ershadi, Willi Kappler</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/038732831d9a769e90ca39fef03c2388f6b292a7bee46163490f4d719bf85e24.jpg" alt="Advanced Techniques for Multivariate Data Analysis Using Python...2025" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Advanced Techniques for Multivariate Data Analysis Using Python...2025</div>
+                    <div class="book-author">Lopez C.</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d0912727c7cb6a7855a6bfb5e6c4a9468b26264faae3a9588970ac857fd280b4.jpg" alt="Agent AI for Finance: From Financial Argument Mining to Agent-Based Modeling" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agent AI for Finance: From Financial Argument Mining to Agent-Based Modeling</div>
+                    <div class="book-author">Chung-Chi Chen, Hiroya Takamura</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/f250e5ead7b902ede69adda13010777939e6e6c40e34066ce2e38ba960dd3885.jpg" alt="Agentic AI in Enterprise: Harnessing Agentic AI for Business Transformation" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI in Enterprise: Harnessing Agentic AI for Business Transformation</div>
+                    <div class="book-author">Sumit Ranjan, Divya Chembachere, Lanwin Lobo</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/e8c75825477dbfd3e28cdba34fbabccf4183f725d9b6df16013ae37a57e3d5f3.jpg" alt="Agentic AI in Enterprise: Harnessing Agentic AI for Business Transformation" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI in Enterprise: Harnessing Agentic AI for Business Transformation</div>
+                    <div class="book-author">Sumit Ranjan, Divya Chembachere, Lanwin Lobo</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/3bd4ec7ecf404d3f4c458cab546d5b4f25b26dea9909806dbd26671cf0c8847b.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/538870b2ed9a85b6801aded04734546836e3f6333408477674864049ec041516.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/985f93f18aa2f9a5d023954a64608579b781174c41b3e1a88e4d0643cc4e4870.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/985f93f18aa2f9a5d023954a64608579b781174c41b3e1a88e4d0643cc4e4870.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">MOBI</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/985f93f18aa2f9a5d023954a64608579b781174c41b3e1a88e4d0643cc4e4870.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang (Editor)</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">AZW3</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/985f93f18aa2f9a5d023954a64608579b781174c41b3e1a88e4d0643cc4e4870.jpg" alt="Agentic AI: Theories and Practices" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic AI: Theories and Practices</div>
+                    <div class="book-author">Ken Huang</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">LIT</span><span class="meta-tag year">2025</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/be06aa147360d4f84a608eebf2796a7522a6dea63c08b84b4faad39998cca324.jpg" alt="Agentic Artificial Intelligence : Harnessing AI Agents to Reinvent Business, Work, and Life (568 Pages)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Agentic Artificial Intelligence : Harnessing AI Agents to Reinvent Business, Work, and Life (568 Pages)</div>
+                    <div class="book-author">Pascal Bornet, Jochen Wirtz, Thomas H. Davenport, David De Cremer, Brian Evergreen, Phil Fersht, Rakesh Gohel, Shail Khiyara, Nandan Mullakara, Pooja Sund</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/968f2a2e9118a8573539de4cceb93f42571f37c448917e5e6c74a9b1b707b725.jpg" alt="Altair in Python ApplicationsDefinitive Reference for Developers and Engineers" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Altair in Python ApplicationsDefinitive Reference for Developers and Engineers</div>
+                    <div class="book-author">Richard Johnson</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/e7f26d6d3b92cba5600e95e6c338eaad3cd583522549f20029f24baf5baaad9a.jpg" alt="Altair in Python ApplicationsDefinitive Reference for Developers and Engineers" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Altair in Python ApplicationsDefinitive Reference for Developers and Engineers</div>
+                    <div class="book-author">Richard Johnson</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/4c47ccb88f72f6bc5f84c70daf826042aecba3ae50a149ecde8a6256b2d6a463.jpg" alt="Applied Statistics with Python Volume I: Introductory Statistics and Regression" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Applied Statistics with Python Volume I: Introductory Statistics and Regression</div>
+                    <div class="book-author">Leon Kaganovskiy</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/internet-archive/181af325ae9a59d82e009751cd5dc1e0c7f25ac715b36d1da8bfd85af7c4279d.jpg" alt="Artificial Intelligence and Deep Learning with python" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Artificial Intelligence and Deep Learning with python</div>
+                    <div class="book-author">Steven D' Ascoli Mis</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/a0c2a4d9f90af93df8e95735d3824283d22929373e12bf4d511d4885452ce4e3.jpg" alt="Artificial Intelligence for Logistics 5.0: From Foundation Models to Agentic AI" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Artificial Intelligence for Logistics 5.0: From Foundation Models to Agentic AI</div>
+                    <div class="book-author">Bernardo Nicoletti</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/fa777d26c71583205f769c9e4d2d5fa06e4b8599e3e3dd7ed45c3b02a9a465ec.jpg" alt="Automate the Boring Stuff With Python, Third Edition: Practical Programming for Total Beginners" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff With Python, Third Edition: Practical Programming for Total Beginners</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b269ce0ceda933deb30b5360955bad7f406392fe6d169f493a73c30670086870.jpg" alt="Automate the Boring Stuff with Python Workbook" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python Workbook</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/09f272356b70410c17f96f8ca8268cc5f1c02d6ce08f0a80c27a2038e0c3a8e2.jpg" alt="Automate the Boring Stuff with Python, 3rd Edition" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python, 3rd Edition</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/667fe661c39a0d285b0249c8f07b7de35846193eea42e917a13e1ad675ad52dd.jpg" alt="Automate the Boring Stuff with Python, 3rd Edition" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python, 3rd Edition</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/09f272356b70410c17f96f8ca8268cc5f1c02d6ce08f0a80c27a2038e0c3a8e2.jpg" alt="Automate the Boring Stuff with Python, 3rd Edition" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python, 3rd Edition</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/cffcfbec62e6b07c60f0b57ba2df58950efecfb0ce9cac75bd2fd14e5e29dce0.jpg" alt="Automate the Boring Stuff with Python, 3rd Edition (11/08/2024 Early Access version)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python, 3rd Edition (11/08/2024 Early Access version)</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/09f272356b70410c17f96f8ca8268cc5f1c02d6ce08f0a80c27a2038e0c3a8e2.jpg" alt="Automate the Boring Stuff with Python, 3rd Edition: Practical Programming for Total Beginners" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automate the Boring Stuff with Python, 3rd Edition: Practical Programming for Total Beginners</div>
+                    <div class="book-author">Al Sweigart</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b020b027f51a0d0fb6569eef811114ddc225d47a53fc12190c9f4aee5576c5a3.jpg" alt="Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API</div>
+                    <div class="book-author">Dargslan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b020b027f51a0d0fb6569eef811114ddc225d47a53fc12190c9f4aee5576c5a3.jpg" alt="Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API</div>
+                    <div class="book-author">Dargslan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">MOBI</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b020b027f51a0d0fb6569eef811114ddc225d47a53fc12190c9f4aee5576c5a3.jpg" alt="Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API</div>
+                    <div class="book-author">Dargslan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">AZW3</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b020b027f51a0d0fb6569eef811114ddc225d47a53fc12190c9f4aee5576c5a3.jpg" alt="Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automating Microsoft 365 With Python: Build Powerful Apps Using Microsoft Graph API</div>
+                    <div class="book-author">Dargslan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">LIT</span><span class="meta-tag year">2025</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d07305d2b9cea800afa4c662fa86aa1da9625a7c0134483ea7ae7faeb8896733.jpg" alt="Automating Tasks with Python for New DevelopersA Practical Guide with Examples" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Automating Tasks with Python for New DevelopersA Practical Guide with Examples</div>
+                    <div class="book-author">William E. Clark</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/383e190267abe24cb177d31bdfe0a2a974782de1f052f6bd5932e49847553911.jpg" alt="Autonomic Business Transformation: A Guide to AI Agents for Practitioners and Executives" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Autonomic Business Transformation: A Guide to AI Agents for Practitioners and Executives</div>
+                    <div class="book-author">Christos Voudouris</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/649753d5e0e6592771506089b937d6be4fb94a62a427a70cdbede102afe1417a.jpg" alt="Autonomous Minds: How Agentic AI Predicts and Learns to Enable Productivity and Empowerment" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Autonomous Minds: How Agentic AI Predicts and Learns to Enable Productivity and Empowerment</div>
+                    <div class="book-author">Francisco Javier Campos Zabala</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/f95cf16a8706738a36e631143cefebc4ad63e9b546fdde0504baa2a6889d063f.jpg" alt="Backtrader Essentials: Building Successful Strategies with Python" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Backtrader Essentials: Building Successful Strategies with Python</div>
+                    <div class="book-author">Ali AZARY</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/2fc54833afb93e0ee69715941f1177035d5daf246fad6edc08b55423735aee44.jpg" alt="Basic Python for Data Science: For Beginners with No Coding Knowledge" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Basic Python for Data Science: For Beginners with No Coding Knowledge</div>
+                    <div class="book-author">Okafor, Chinelo</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d5adf6df702d18b0aa2785cccc92f807ebfce89e2d070315322998dd8eb02d4c.jpg" alt="BeeWare: Cross-Platform GUI Development with Python: Craft stunning, responsive applications that seamlessly glide across Windows, macOS, Linux, Android, and even iOS." class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">BeeWare: Cross-Platform GUI Development with Python: Craft stunning, responsive applications that seamlessly glide across Windows, macOS, Linux, Android, and even iOS.</div>
+                    <div class="book-author">Marl, Jasper</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/47268538a751df8dcdaf980ffc5456a4c6a425ad60ec785b909bccb68a97bdeb.jpg" alt="Beginning Python 3 with Claude 3" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Beginning Python 3 with Claude 3</div>
+                    <div class="book-author">Oswald Campesato</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/19307806785d65c0befbc26bc2cecc822f744758fd61397cfdc4c206c9a38638.jpg" alt="Beginning Python 3 with Claude 3" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Beginning Python 3 with Claude 3</div>
+                    <div class="book-author">Oswald Campesato</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/6ba2aa16b02af68756dc9ee5b2374f9a62fe16e80685cbe9d0046ef2d58bec68.jpg" alt="Bioinformatics with Python Cookbook, Fourth Edition (Early Access)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Bioinformatics with Python Cookbook, Fourth Edition (Early Access)</div>
+                    <div class="book-author">Shane Brubaker</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0b325cd56ac280bf1604fac05d352e7588dc0c490c4e633d7d587e26586602b0.jpg" alt="BiteSize Python for Absolute Beginners" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">BiteSize Python for Absolute Beginners</div>
+                    <div class="book-author">Wu, Di</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/d698d05d3bbef98f030f413a21a66802baac2b0e8fefb4344a3b4dc82f057082.jpg" alt="BiteSize Python for Absolute Beginners" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">BiteSize Python for Absolute Beginners</div>
+                    <div class="book-author">Wu, Di</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/8b3632244e171357ded335871bd7591381be43269b6b262fd4a4f1ecfdd688b7.jpg" alt="BiteSize Python for Absolute Beginners: With Practice Labs, Real-World Examples, and Generative AI Assistance" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">BiteSize Python for Absolute Beginners: With Practice Labs, Real-World Examples, and Generative AI Assistance</div>
+                    <div class="book-author">Di Wu</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/a19c9104ef8fe89d490a5edacfb9ec1293a792ac19762334f5fae31b95188dd9.jpg" alt="Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4</div>
+                    <div class="book-author">Isabel Lupiani</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/fe9c843bc27b61067dce44e11fa36e6174378a84c0b168017c4c8e153b66bb15.jpg" alt="Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4</div>
+                    <div class="book-author">Isabel Lupiani</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/fe9c843bc27b61067dce44e11fa36e6174378a84c0b168017c4c8e153b66bb15.jpg" alt="Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4</div>
+                    <div class="book-author">Isabel Lupiani</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/fe9c843bc27b61067dce44e11fa36e6174378a84c0b168017c4c8e153b66bb15.jpg" alt="Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4</div>
+                    <div class="book-author">Isabel Lupiani</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">MOBI</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/fe9c843bc27b61067dce44e11fa36e6174378a84c0b168017c4c8e153b66bb15.jpg" alt="Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Blender Scripting with Python: Automate Tasks, Write Helper Tools, and Procedurally Generate Models in Blender 4</div>
+                    <div class="book-author">Isabel Lupiani</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">AZW3</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/de8f5455a78890a9ddd4f247ba35b258d198adf5502a0270f8b36c6be2d6ce65.jpg" alt="Build a Robo Advisor with Python (From Scratch): Automate your financial and investment decisions" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Build a Robo Advisor with Python (From Scratch): Automate your financial and investment decisions</div>
+                    <div class="book-author">Rob Reider, Alex Michalka</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ae640db0ee09e9f7c010c2b4e6e5dafa625ccc22c841f3b0be673d70e99f67de.jpg" alt="Build a Robo-Advisor with Python (From Scratch)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Build a Robo-Advisor with Python (From Scratch)</div>
+                    <div class="book-author">Rob Reider, Alexander Michalka</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ae640db0ee09e9f7c010c2b4e6e5dafa625ccc22c841f3b0be673d70e99f67de.jpg" alt="Build a Robo-Advisor with Python (From Scratch)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Build a Robo-Advisor with Python (From Scratch)</div>
+                    <div class="book-author">Rob Reider, Alexander Michalka</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/ae640db0ee09e9f7c010c2b4e6e5dafa625ccc22c841f3b0be673d70e99f67de.jpg" alt="Build a Robo-Advisor with Python (From Scratch)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Build a Robo-Advisor with Python (From Scratch)</div>
+                    <div class="book-author">Rob Reider, Alexander Michalka</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b720da43a90b906c18288e51afdfaac52a374e15f61d0cb074ff04768b1162e7.jpg" alt="Building AI Agents with LLMs, RAG, and Knowledge Graphs" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building AI Agents with LLMs, RAG, and Knowledge Graphs</div>
+                    <div class="book-author">Salvatore Raieli, Gabriele Iuculano</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/9483823e486fcef7e593b7c04c6031596d302bd07693e99267185062ca3e48e6.jpg" alt="Building AI Agents with LLMs: Unlocking the Power of Large Language Models" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building AI Agents with LLMs: Unlocking the Power of Large Language Models</div>
+                    <div class="book-author">Vemula, Anand</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b19fbcab2cd663441e4602bf57a7f43314499fdfa9411ae2f66176ca1f3e9f2e.jpg" alt="Building Agents with OpenAI Agents SDK: Create practical AI agents and agentic systems through hands-on projects" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Agents with OpenAI Agents SDK: Create practical AI agents and agentic systems through hands-on projects</div>
+                    <div class="book-author">Henry Habib</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/dba1d79e23a2be88df5418b8550b8fdbd464920d1ced7c0d00c44d0966342169.png" alt="Building Applications with AI Agents (Fifth Early Release)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Applications with AI Agents (Fifth Early Release)</div>
+                    <div class="book-author">Michael Albada</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/dba1d79e23a2be88df5418b8550b8fdbd464920d1ced7c0d00c44d0966342169.png" alt="Building Applications with AI Agents (Fifth Early Release)" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Applications with AI Agents (Fifth Early Release)</div>
+                    <div class="book-author">Michael Albada</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/58b24313e9b3ab70bcc3f132c76274e21671023f520c414c60d9f1179e0f5828.jpg" alt="Building Applications with AI Agents: Designing and Implementing Multiagent Systems" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Applications with AI Agents: Designing and Implementing Multiagent Systems</div>
+                    <div class="book-author">Michael Albada</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/5e41231250d0653b8b0c832348a595ba47585a12bfeccb50f12fe7638a940b92.jpg" alt="Building Cross-Platform Games with Python and Kivy: Build stunning games that run seamlessly on desktops, smartphones, and tablets – all with a single codebase." class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Cross-Platform Games with Python and Kivy: Build stunning games that run seamlessly on desktops, smartphones, and tablets – all with a single codebase.</div>
+                    <div class="book-author">Jasper Marl</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">EPUB</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/0f2552bd29841bb465e0c2d6d004c611c883ed500f1652a1d919e741427a9f9a.jpg" alt="Building Embodied AI Systems: The Agents, the Architecture Principles, Challenges, and Application Domains" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Embodied AI Systems: The Agents, the Architecture Principles, Challenges, and Application Domains</div>
+                    <div class="book-author">Pethuru Raj · Alvaro Rocha · Simar Preet Singh · Pushan Kumar Dutta · B. Sundaravadivazhagan</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/1ec53ad9dcc2cfd749f52965593aa8eabf93e36898bdc06f05126a6b6d965905.webp" alt="Building Generative AI Agents" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Generative AI Agents</div>
+                    <div class="book-author">Tom Taulli, Gaurav Deshmukh</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/a768def2206d9734b1b58e2e6fc97681a0d6ddeebbdd6e7d6b726375129a0ce1.jpg" alt="Building Generative AI Agents. Using LangGraph, AutoGen, and CrewAI 2025" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Generative AI Agents. Using LangGraph, AutoGen, and CrewAI 2025</div>
+                    <div class="book-author">Tom Taulli, Gaurav Deshmukh</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/1c78e9d0a8a03e3c0cc698609caa2366e0fcc3f13db3b591408bb0201d78b0ad.jpg" alt="Building Generative AI Agents: Using LangGraph, AutoGen, and CrewAI" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Generative AI Agents: Using LangGraph, AutoGen, and CrewAI</div>
+                    <div class="book-author">Tom Taulli, Gaurav Deshmukh</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/f8f32856a53bf988f1f05c16ed0030555924d51c2be7644f9451f4737dee3f17.jpg" alt="Building Generative AI Agents: Using LangGraph, AutoGen, and CrewAI" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Generative AI Agents: Using LangGraph, AutoGen, and CrewAI</div>
+                    <div class="book-author">Tom Taulli, Gaurav Deshmukh</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/54c4e2d0316741182545419915c882e4eb1c864c2c6d48ce8a7f7ab168555178.jpg" alt="Building Quantum Software in Python: A developer’s guide" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Quantum Software in Python: A developer’s guide</div>
+                    <div class="book-author">Constantin Gonciulea, Charlee Stefanski</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="book-card">
+                <img src="https://s3proxy.cdn-zlib.sk/covers299/collections/userbooks/b577e3b979d94e7a9e2a6cff416064f388a1ba453cb245f8a3f7f25d0fec97e8.jpg" alt="Building Quantum Software in Python: A developer’s guide" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.no-cover').style.display='flex'; this.style.display='none';"><div class="book-cover no-cover" style="display:none;">📖</div>
+                <div class="book-info">
+                    <div class="book-title">Building Quantum Software in Python: A developer’s guide</div>
+                    <div class="book-author">Constantin Gonciulea, Charlee Stefanski</div>
+                    <div class="book-meta">
+                        <span class="meta-tag format">PDF</span><span class="meta-tag year">2025</span><span class="meta-tag language">English</span>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+</body>
+</html>
